@@ -11,8 +11,8 @@ const app = express();
 
 /* ---------- MIDDLEWARE ---------- */
 app.use(cors());
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ---------- HOME ---------- */
@@ -21,7 +21,6 @@ app.get("/", (req, res) => {
 });
 
 /* ---------- MONGODB ---------- */
-console.log("MongoDB URI:", process.env.MONGODB_URI);
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB Atlas connected ✅"))
@@ -48,6 +47,7 @@ const formSchema = new mongoose.Schema({
   company: Object,
   photo: String
 });
+
 const Form = mongoose.model("Form", formSchema);
 
 /* ---------- MULTER ---------- */
@@ -56,9 +56,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
     const formData = { ...req.body };
 
-      // Convert to arrays if needed
+    // Fix arrays
     if (formData.employmentType && !Array.isArray(formData.employmentType)) {
       formData.employmentType = [formData.employmentType];
     }
@@ -66,39 +69,37 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       formData.skills = [formData.skills];
     }
 
-   if (req.file) {
-      formData.photo = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-    }
-    // Handle uploaded photo
+    // Handle photo (ONLY ONCE)
     if (req.file) {
-      formData.photo = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+      formData.photo = req.file.buffer.toString("base64");
     }
 
-    // Save to DB
+    // Save to MongoDB
     const form = new Form(formData);
     await form.save();
 
-    // PDFKit
+    // ---------- PDF ----------
     const doc = new PDFDocument({ margin: 40 });
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "attachment; filename=application.pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=application.pdf"
+    );
+
     doc.pipe(res);
 
-    // Logo (safe check)
-    const logoPath = path.join(__dirname, "public/loogo.jpeg"); // <-- put your logo here
+    // Logo (optional)
+    const logoPath = path.join(__dirname, "public/loogo.jpeg");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 100 });
       doc.moveDown(2);
-    } else {
-      console.log("Logo not found at:", logoPath);
     }
 
-    // Header
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
     doc.moveDown();
-
     // Personal info
     doc.fontSize(12);
     doc.text(`Full Name: ${formData.fullName || ""}`);
@@ -114,14 +115,10 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.moveDown();
 
     // Photo (safe try-catch)
-    try {
-      if (formData.photo) {
-        const img = Buffer.from(formData.photo.split(",")[1], "base64");
-        doc.image(img, { width: 120, height: 120, align: "center" });
-        doc.moveDown();
-      }
-    } catch (err) {
-      console.log("Failed to add photo:", err);
+   if (formData.photo) {
+      const img = Buffer.from(formData.photo, "base64");
+      doc.image(img, { width: 120, align: "center" });
+      doc.moveDown();
     }
 
     // Education
