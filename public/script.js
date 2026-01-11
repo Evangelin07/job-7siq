@@ -2,7 +2,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   e.preventDefault();
 
   const formElement = this;
-  const formData = new FormData(this);
+  const formData = new FormData(formElement);
 
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
