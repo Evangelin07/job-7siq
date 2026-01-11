@@ -69,10 +69,6 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       formData.skills = [formData.skills];
     }
 
-    // Handle photo (ONLY ONCE)
-    if (req.file) {
-      formData.photo = req.file.buffer.toString("base64");
-    }
 
     // Save to MongoDB
     const form = new Form(formData);
@@ -115,11 +111,18 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.moveDown();
 
     // Photo (safe try-catch)
-   if (formData.photo) {
-      const img = Buffer.from(formData.photo, "base64");
-      doc.image(img, { width: 120, align: "center" });
-      doc.moveDown();
-    }
+   if (req.file && req.file.buffer) {
+  try {
+    doc.image(req.file.buffer, {
+      width: 120,
+      align: "center"
+    });
+    doc.moveDown();
+  } catch (e) {
+    console.log("Image add failed:", e.message);
+  }
+}
+
 
     // Education
     if (formData.education?.length) {
