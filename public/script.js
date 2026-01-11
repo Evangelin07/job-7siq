@@ -73,6 +73,5 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
   } catch (err) {
     console.error("❌ Fetch error:", err);
-    alert("Backend not reachable ❌ (Check server)");
   }
 });
