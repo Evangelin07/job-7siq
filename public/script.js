@@ -8,6 +8,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const phone = formData.get("phone")?.trim();
   const email = formData.get("email")?.trim();
 
+  // Validation checks
   if (!fullName || !phone || !email) {
     alert("Please fill all required fields ❗");
     return;
@@ -24,17 +25,25 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   }
 
   try {
+    // Send JSON data to backend
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      body: formData
-});
-
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        fullName,
+        phone,
+        email
+      })
+    });
 
     if (!res.ok) {
       alert("PDF generation failed ❌");
       return;
     }
 
+    // Get PDF blob and download
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
 
@@ -45,7 +54,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
     window.URL.revokeObjectURL(url);
     alert("PDF downloaded successfully ✅");
-    
+
     formElement.reset();
 
   } catch (err) {
