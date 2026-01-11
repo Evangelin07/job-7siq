@@ -5,34 +5,30 @@ const PDFDocument = require("pdfkit");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
 const app = express();
-app.use(cors());
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname,'public/index.html'));
-});
+/* ---------- MIDDLEWARE ---------- */
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname,'public')));
-app.post('/submit',async(req,res)=>{
-  const data= req.body;
-})
+app.use(express.static(path.join(__dirname, "public")));
 
-/* ---------- MONGODB SETUP ---------- */
-require("dotenv").config({ quiet: true  });
+/* ---------- HOME ---------- */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
+});
 
-// Add this at the top of your file
-
-// 2️⃣ Test if the variable is loaded correctly
+/* ---------- MONGODB ---------- */
 console.log("MongoDB URI:", process.env.MONGODB_URI);
 
-mongoose.connect(process.env.MONGODB_URI)
+mongoose
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB Atlas connected ✅"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-
-/* ---------- CREATE SCHEMA ---------- */
+/* ---------- SCHEMA ---------- */
 const formSchema = new mongoose.Schema({
   fullName: String,
   phone: String,
@@ -56,72 +52,59 @@ const formSchema = new mongoose.Schema({
 
 const Form = mongoose.model("Form", formSchema);
 
-/* ---------- MULTER SETUP ---------- */
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+/* ---------- MULTER ---------- */
+const upload = multer({ storage: multer.memoryStorage() });
 
-/* ---------- ROUTE ---------- */
+/* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
     const formData = { ...req.body };
 
-    // ---------- Fix arrays ----------
-    if (formData.employmentType) {
-      if (!Array.isArray(formData.employmentType)) formData.employmentType = [formData.employmentType];
-      formData.employmentType = formData.employmentType.map(item => typeof item === "string" ? item : (item.value || ""));
+    /* --- fix arrays --- */
+    if (formData.employmentType && !Array.isArray(formData.employmentType)) {
+      formData.employmentType = [formData.employmentType];
     }
 
-    if (formData.skills) {
-      if (!Array.isArray(formData.skills)) formData.skills = [formData.skills];
-      formData.skills = formData.skills.map(item => typeof item === "string" ? item : "");
+    if (formData.skills && !Array.isArray(formData.skills)) {
+      formData.skills = [formData.skills];
     }
 
-    // ---------- Handle uploaded photo ----------
+    /* --- photo --- */
     if (req.file) {
       formData.photo = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
     }
 
-    // ---------- Save to MongoDB ----------
+    /* --- save to DB --- */
     const form = new Form(formData);
     await form.save();
 
-    // ---------- Generate PDF ----------
-async function generatePDF(html, pdfPath) {
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu"
-    ]
-  });
+    /* ---------- PDF START ---------- */
+    const doc = new PDFDocument({ margin: 40 });
 
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: "networkidle0" });
-  await page.pdf({ path: pdfPath, format: "A4", printBackground: true });
-  await browser.close();
-}
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=application.pdf"
+    );
 
+    doc.pipe(res);
 
+    /* --- Logo --- */
+    const logoPath = path.join(__dirname, "logo.jpeg"); // filename check pannunga
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 40, 30, { width: 100 });
+      doc.moveDown(2);
+    }
 
-    // ---------- Add Logo ----------
-const logoPath = path.join(__dirname, "loogo.jpeg");
-if (fs.existsSync(logoPath)) {
-  doc.image(logoPath, 40, 30, { width: 100 }); // x=40, y=30
-  doc.moveDown(2); // spacing after logo
-} else {
-  console.log("Logo not found at:", logoPath);
-}
-
-    // ---------- Header ----------
+    /* --- Header --- */
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
     doc.moveDown();
 
-    // ---------- Personal Details ----------
-    doc.fontSize(12).text(`Full Name: ${formData.fullName || ""}`);
+    /* --- Personal --- */
+    doc.fontSize(12);
+    doc.text(`Full Name: ${formData.fullName || ""}`);
     doc.text(`Phone: ${formData.phone || ""}`);
     doc.text(`Email: ${formData.email || ""}`);
     doc.text(`Position: ${formData.position || ""}`);
@@ -133,76 +116,48 @@ if (fs.existsSync(logoPath)) {
     doc.text(`Aadhar: ${formData.aadhar || ""}`);
     doc.moveDown();
 
-    // ---------- Uploaded Photo ----------
-if (formData.photo) {
-  const img = Buffer.from(formData.photo.split(",")[1], "base64");
-  const x = doc.page.width / 2 - 75; // center image
-  const y = doc.y + 20; // some space below text
-  doc.image(img, x, y, { width: 150, height: 150 });
-  doc.moveDown(3); // space after image
-}
+    /* --- Photo in PDF --- */
+    if (formData.photo) {
+      const img = Buffer.from(formData.photo.split(",")[1], "base64");
+      doc.image(img, { width: 120, align: "center" });
+      doc.moveDown();
+    }
 
-    // ---------- Education ----------
+    /* --- Education --- */
     if (formData.education?.length) {
       doc.text("Education:");
-      formData.education.forEach((edu, i) => {
-        doc.text(`  ${i + 1}. ${edu.degree || ""} - ${edu.institution || ""} (${edu.year || ""})`);
+      formData.education.forEach((e, i) => {
+        doc.text(`${i + 1}. ${e.degree || ""} - ${e.institution || ""}`);
       });
       doc.moveDown();
     }
 
-    // ---------- Employment ----------
+    /* --- Employment --- */
     if (formData.employment?.length) {
       doc.text("Employment History:");
-      formData.employment.forEach((job, i) => {
-        doc.text(`  ${i + 1}. ${job.company || ""} - ${job.position || ""} (${job.duration || ""})`);
+      formData.employment.forEach((e, i) => {
+        doc.text(`${i + 1}. ${e.company || ""} - ${e.position || ""}`);
       });
       doc.moveDown();
     }
 
-    // ---------- Skills ----------
+    /* --- Skills --- */
     if (formData.skills?.length) {
       doc.text("Skills: " + formData.skills.join(", "));
       doc.moveDown();
     }
 
-    // ---------- Family ----------
-    if (formData.family?.length) {
-      doc.text("Family:");
-      formData.family.forEach((member, i) => {
-        doc.text(`  ${i + 1}. ${member.name || ""} - ${member.relation || ""} (${member.age || ""})`);
-      });
-      doc.moveDown();
-    }
-
-    // ---------- Emergency ----------
+    /* --- Emergency --- */
     if (formData.emergency?.length) {
       doc.text("Emergency Contacts:");
-      formData.emergency.forEach((contact, i) => {
-        doc.text(`  ${i + 1}. ${contact.name || ""} - ${contact.phone || ""} (${contact.relation || ""})`);
-      });
-      doc.moveDown();
-    }
-
-    // ---------- Joining ----------
-    if (formData.joining) {
-      doc.text("Joining Details:");
-      Object.entries(formData.joining).forEach(([key, value]) => {
-        doc.text(`  ${key}: ${value}`);
-      });
-      doc.moveDown();
-    }
-
-    // ---------- Company ----------
-    if (formData.company) {
-      doc.text("Company Details:");
-      Object.entries(formData.company).forEach(([key, value]) => {
-        doc.text(`  ${key}: ${value}`);
+      formData.emergency.forEach((e, i) => {
+        doc.text(`${i + 1}. ${e.name || ""} - ${e.phone || ""}`);
       });
       doc.moveDown();
     }
 
     doc.end();
+    /* ---------- PDF END ---------- */
 
   } catch (err) {
     console.error(err);
@@ -210,9 +165,8 @@ if (formData.photo) {
   }
 });
 
-/* ---------- START SERVER ---------- */
+/* ---------- SERVER ---------- */
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
-  console.log('Backend is running successfully on port ${PORT}');
+  console.log(`Backend is running successfully on port ${PORT}`);
 });
