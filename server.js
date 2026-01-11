@@ -60,7 +60,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
     const formData = { ...req.body };
 
-    /* --- fix arrays --- */
+    // Fix arrays
     if (formData.employmentType && !Array.isArray(formData.employmentType)) {
       formData.employmentType = [formData.employmentType];
     }
@@ -69,40 +69,36 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       formData.skills = [formData.skills];
     }
 
-    /* --- photo --- */
+    // Photo
     if (req.file) {
       formData.photo = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
     }
 
-    /* --- save to DB --- */
+    // Save to MongoDB
     const form = new Form(formData);
     await form.save();
 
-    /* ---------- PDF START ---------- */
+    // PDFKit
     const doc = new PDFDocument({ margin: 40 });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=application.pdf"
-    );
-
+    res.setHeader("Content-Disposition", "attachment; filename=application.pdf");
     doc.pipe(res);
 
-    /* --- Logo --- */
-    const logoPath = path.join(__dirname, "logo.jpeg"); // filename check pannunga
+    // Logo
+    const logoPath = path.join(__dirname, "logo.jpeg"); // file must exist
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 100 });
       doc.moveDown(2);
     }
 
-    /* --- Header --- */
+    // Header
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
     doc.moveDown();
 
-    /* --- Personal --- */
+    // Personal details
     doc.fontSize(12);
     doc.text(`Full Name: ${formData.fullName || ""}`);
     doc.text(`Phone: ${formData.phone || ""}`);
@@ -116,23 +112,23 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.text(`Aadhar: ${formData.aadhar || ""}`);
     doc.moveDown();
 
-    /* --- Photo in PDF --- */
+    // Photo
     if (formData.photo) {
       const img = Buffer.from(formData.photo.split(",")[1], "base64");
-      doc.image(img, { width: 120, align: "center" });
+      doc.image(img, { width: 120, height: 120, align: "center" });
       doc.moveDown();
     }
 
-    /* --- Education --- */
+    // Education
     if (formData.education?.length) {
       doc.text("Education:");
       formData.education.forEach((e, i) => {
-        doc.text(`${i + 1}. ${e.degree || ""} - ${e.institution || ""}`);
+        doc.text(`${i + 1}. ${e.degree || ""} - ${e.institute || ""}`);
       });
       doc.moveDown();
     }
 
-    /* --- Employment --- */
+    // Employment
     if (formData.employment?.length) {
       doc.text("Employment History:");
       formData.employment.forEach((e, i) => {
@@ -141,13 +137,13 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       doc.moveDown();
     }
 
-    /* --- Skills --- */
+    // Skills
     if (formData.skills?.length) {
       doc.text("Skills: " + formData.skills.join(", "));
       doc.moveDown();
     }
 
-    /* --- Emergency --- */
+    // Emergency
     if (formData.emergency?.length) {
       doc.text("Emergency Contacts:");
       formData.emergency.forEach((e, i) => {
@@ -157,8 +153,6 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     doc.end();
-    /* ---------- PDF END ---------- */
-
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error ❌");
@@ -168,5 +162,5 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
 /* ---------- SERVER ---------- */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Backend is running successfully on port ${PORT}`);
+  console.log(`Backend running on port ${PORT}`);
 });
