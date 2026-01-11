@@ -15,6 +15,13 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
+  const educationalBackground = formData.getAll("educationalBackground");   // multiple inputs
+  const employmentHistory = formData.getAll("employmentHistory");
+  const skillsTraining = formData.getAll("skillsTraining");
+  const familyDetails = formData.getAll("familyDetails");
+  const emergencyContact = formData.getAll("emergencyContact");
+  const joiningDetails = formData.get("joiningDetails");
+
   // Validation checks
   if (!fullName || !phone || !email) {
     alert("Please fill all required fields ❗");
@@ -48,7 +55,13 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         maritalStatus,
         address,
         dob,
-        aadhar
+        aadhar,
+        educationalBackground,
+        employmentHistory,
+        SkillsTraining,
+        familyDetails,
+        emergencyContact,
+        joiningDetails
       })
     });
 
