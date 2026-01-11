@@ -25,7 +25,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   try {
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
   method: "POST",
-  headers:{'Content-Type':'application/json'},
   body:JSON.stringify(formData)
 });
 
