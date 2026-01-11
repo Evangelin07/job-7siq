@@ -4,11 +4,9 @@ const PDFDocument = require("pdfkit");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-const multer = require("multer");
 require("dotenv").config();
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
 
 /* ---------- MIDDLEWARE ---------- */
 app.use(cors());
@@ -52,7 +50,7 @@ const formSchema = new mongoose.Schema({
 const Form = mongoose.model("Form", formSchema);
 
 /* ---------- GENERATE PDF (JSON) ---------- */
-app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
+app.post("/generate-pdf", async (req, res) => {
   try {
     let data = req.body;
 
@@ -72,22 +70,6 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=Application_Form.pdf");
     doc.pipe(res);
-
-    doc.pipe(res);
-
-// ✅ Insert photo if uploaded
-if (req.file) {
-  try {
-    doc.image(req.file.path, {
-      fit: [120, 120],   // size of photo
-      align: "center"
-    });
-    doc.moveDown(2);
-  } catch (err) {
-    console.error("Photo error:", err);
-  }
-}
-
 
     // Optional logo
     const logoPath = path.join(__dirname, "public/loogo.jpeg");
