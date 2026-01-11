@@ -34,7 +34,14 @@ document.getElementById("applicationForm").addEventListener("submit", async func
       body: JSON.stringify({
         fullName,
         phone,
-        email
+        email,
+        position,
+        dateofApplication,
+        employmentType,
+        matritalStatus,
+        address,
+        dob,
+        aadhar
       })
     });
 
