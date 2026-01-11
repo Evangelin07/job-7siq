@@ -14,50 +14,28 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
-  const education = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("education[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
+  function buildArray(prefix) {
+    const obj = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith(prefix)) {
+        // example: education[0][degree]
+        const match = key.match(/\[(\d+)\]\[(\w+)\]/);
+        if (match) {
+          const index = match[1];
+          const field = match[2];
+          if (!obj[index]) obj[index] = {};
+          obj[index][field] = value.trim();
+        }
+      }
     }
+    return Object.values(obj);
   }
 
-
-  const employment = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("employment[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
-    }
-  }
-
-
-  const skills = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("skills[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
-    }
-  }
-
-
-  const family = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("family[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
-    }
-  }
-
-
-  const emergency = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("emergency[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
-    }
-  }
-
+  const educationalBackground = buildArray("education");
+  const employmentHistory    = buildArray("employment");
+  const skillsTraining       = buildArray("skills");
+  const familyDetails        = buildArray("family");
+  const emergencyContact     = buildArray("emergency");
 
   const joining = {};
   for (const [key, value] of formData.entries()) {
