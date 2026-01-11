@@ -31,11 +31,50 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
-  const educationalBackground = buildObject("educationBackground");
-  const employmentHistory = buildObject("employmentHistory");
-  const skillsTraining = buildObject("skillsTraining");
-  const familyDetails = buildObject("familyDetails");
-  const emergencyContact = buildObject("emergencyContact");
+  const education = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("education[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      joining[field] = value.trim();
+    }
+  }
+
+
+  const employment = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("employment[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      joining[field] = value.trim();
+    }
+  }
+
+
+  const skills = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("skills[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      joining[field] = value.trim();
+    }
+  }
+
+
+  const family = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("family[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      joining[field] = value.trim();
+    }
+  }
+
+
+  const emergency = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("emergency[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      joining[field] = value.trim();
+    }
+  }
+
 
   const joining = {};
   for (const [key, value] of formData.entries()) {
