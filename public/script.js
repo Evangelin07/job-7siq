@@ -1,6 +1,7 @@
 document.getElementById("applicationForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
+  const formElement = this;
   const formData = new FormData(this);
 
   const fullName = formData.get("fullName")?.trim();
