@@ -3,11 +3,11 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const formElement = this;
   const formData = new FormData(formElement);
 
-  function buildArray(prefix) {
+function buildArray(prefix) {
   const obj = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith(prefix)) {
-      // example: education[0][degree]
+      // Example: education[0][degree]
       const match = key.match(/\[(\d+)\]\[(\w+)\]/);
       if (match) {
         const index = match[1];
@@ -17,8 +17,9 @@ document.getElementById("applicationForm").addEventListener("submit", async func
       }
     }
   }
-  return Object.values(obj);
+  return Object.values(obj); // returns array of objects
 }
+
 
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
