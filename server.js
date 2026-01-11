@@ -51,7 +51,9 @@ const formSchema = new mongoose.Schema({
 const Form = mongoose.model("Form", formSchema);
 
 /* ---------- MULTER ---------- */
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024}
+ });
 
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
