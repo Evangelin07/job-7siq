@@ -1,6 +1,5 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const cors = require("cors");
 const fs = require("fs");
@@ -12,7 +11,7 @@ const app = express();
 /* ---------- MIDDLEWARE ---------- */
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json()); // JSON parser
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ---------- HOME ---------- */
@@ -33,7 +32,7 @@ const formSchema = new mongoose.Schema({
   email: String,
   dateOfApplication: String,
   position: String,
-  employmentType: [String],
+  employmentType: [String], // we will normalize to array
   maritalStatus: String,
   address: String,
   dob: String,
@@ -45,145 +44,168 @@ const formSchema = new mongoose.Schema({
   emergency: Array,
   joining: Object,
   company: Object,
-  photo: String
+  photo: String // not used in JSON route
 });
 
 const Form = mongoose.model("Form", formSchema);
 
-/* ---------- MULTER ---------- */
-const upload = multer({ storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 *1024}
- });
-
-/* ---------- GENERATE PDF ---------- */
-app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
+/* ---------- GENERATE PDF (JSON) ---------- */
+app.post("/generate-pdf", async (req, res) => {
   try {
- let data = req.body;
+    let data = req.body;
 
-    // ✅ Add this block immediately after req.body
-    ["education", "employment", "skills", "family", "emergency", "joining", "company"].forEach((key) => {
-      if (typeof data[key] === "string") {
-        try {
-          data[key] = JSON.parse(data[key]);
-        } catch (e) {
-          // ignore if not JSON
-        }
+    // Normalize employmentType to array for schema compatibility
+    if (data.employmentType) {
+      if (Array.isArray(data.employmentType)) {
+        // keep as is
+      } else if (typeof data.employmentType === "string" && data.employmentType.length) {
+        data.employmentType = [data.employmentType];
+      } else {
+        data.employmentType = [];
       }
+    } else {
+      data.employmentType = [];
+    }
+
+    // Ensure arrays/objects are proper types (in case client sends strings)
+    const arrayKeys = ["education", "employment", "skills", "family", "emergency"];
+    arrayKeys.forEach(k => {
+      if (typeof data[k] === "string") {
+        try { data[k] = JSON.parse(data[k]); } catch { data[k] = []; }
+      }
+      if (!Array.isArray(data[k])) data[k] = [];
     });
 
-
+    const objectKeys = ["joining", "company"];
+    objectKeys.forEach(k => {
+      if (typeof data[k] === "string") {
+        try { data[k] = JSON.parse(data[k]); } catch { data[k] = {}; }
+      }
+      if (typeof data[k] !== "object" || data[k] === null) data[k] = {};
+    });
 
     // Save to MongoDB
-    await Form.create(formData);
+    await Form.create(data);
 
     // ---------- PDF ----------
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=application.pdf"
-    );
-
+    res.setHeader("Content-Disposition", "attachment; filename=Application_Form.pdf");
     doc.pipe(res);
 
-    // Logo (optional)
+    // Optional logo
     const logoPath = path.join(__dirname, "public/loogo.jpeg");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 100 });
       doc.moveDown(2);
     }
 
+    // Header
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
     doc.moveDown();
+
     // Personal info
     doc.fontSize(12);
-    doc.text(`Full Name: ${formData.fullName || ""}`);
-    doc.text(`Phone: ${formData.phone || ""}`);
-    doc.text(`Email: ${formData.email || ""}`);
-    doc.text(`Position: ${formData.position || ""}`);
-    doc.text(`Date of Application: ${formData.dateOfApplication || ""}`);
-    doc.text(`Employment Type: ${formData.employmentType?.join(", ") || ""}`);
-    doc.text(`Marital Status: ${formData.maritalStatus || ""}`);
-    doc.text(`Address: ${formData.address || ""}`);
-    doc.text(`DOB: ${formData.dob || ""}`);
-    doc.text(`Aadhar: ${formData.aadhar || ""}`);
+    doc.text(`Full Name: ${data.fullName || ""}`);
+    doc.text(`Phone: ${data.phone || ""}`);
+    doc.text(`Email: ${data.email || ""}`);
+    doc.text(`Position: ${data.position || ""}`);
+    doc.text(`Date of Application: ${data.dateOfApplication || ""}`);
+    doc.text(`Employment Type: ${Array.isArray(data.employmentType) ? data.employmentType.join(", ") : ""}`);
+    doc.text(`Marital Status: ${data.maritalStatus || ""}`);
+    doc.text(`Address: ${data.address || ""}`);
+    doc.text(`DOB: ${data.dob || ""}`);
+    doc.text(`Aadhar: ${data.aadhar || ""}`);
     doc.moveDown();
 
-    // Photo (safe try-catch)
-// ---------- PHOTO (SAFE & RENDER FRIENDLY) ----------
-    if (req.file?.buffer) {
-      doc.image(req.file.buffer, { width: 120 });
-      doc.moveDown();
-    }
-
-
     // Education
-    if (formData.education?.length) {
-      doc.text("Education:");
-      formData.education.forEach((e, i) => {
-        doc.text(`${i + 1}. ${e.degree || ""} - ${e.institute || ""}`);
+    if (data.education.length) {
+      doc.fontSize(13).text("Educational Background", { underline: true });
+      doc.moveDown(0.5);
+      data.education.forEach((e, i) => {
+        doc.fontSize(12).text(
+          `${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`
+        );
       });
       doc.moveDown();
     }
 
     // Employment
-    if (formData.employment?.length) {
-      doc.text("Employment History:");
-      formData.employment.forEach((e, i) => {
-        doc.text(`${i + 1}. ${e.company || ""} - ${e.position || ""}`);
+    if (data.employment.length) {
+      doc.fontSize(13).text("Employment History", { underline: true });
+      doc.moveDown(0.5);
+      data.employment.forEach((e, i) => {
+        doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
+        doc.text(`Reason: ${e.reason || ""}`);
+        doc.moveDown(0.3);
       });
       doc.moveDown();
     }
 
     // Skills
-   // ---------- SKILLS ----------
-if (Array.isArray(formData.skills)) {
-  doc.text("Skills & Training:");
-  formData.skills.forEach((s, i) => {
-    if (s.skill) {
-      doc.text(
-        `${i + 1}. ${s.skill} | Level: ${s.level || "-"} | Year: ${s.year || "-"} | Institute: ${s.institute || "-"}`
-      );
-    }
-  });
-  doc.moveDown();
-}
-
-//Family
-if (formData.family?.length) {
-  doc.text("Family Details:");
-  formData.family.forEach((f, i) => {
-    doc.text(`${i + 1}. ${f.name || ""} - Relation: ${f.relation || ""} - Age: ${f.age || ""}`);
-  });
-  doc.moveDown();
-}
-
-    // Emergency
-    if (formData.emergency?.length) {
-      doc.text("Emergency Contacts:");
-      formData.emergency.forEach((e, i) => {
-        doc.text(`${i + 1}. ${e.name || ""} - ${e.phone || ""}`);
+    if (data.skills.length) {
+      doc.fontSize(13).text("Skills & Training", { underline: true });
+      doc.moveDown(0.5);
+      data.skills.forEach((s, i) => {
+        doc.fontSize(12).text(
+          `${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`
+        );
       });
       doc.moveDown();
     }
-//Joining
-    if (formData.joining) {
-  doc.text("Joining Details:");
-  doc.text(`Expected Date: ${formData.joining.date || ""}`);
-  doc.text(`Notice Period: ${formData.joining.noticePeriod || ""}`);
-  doc.moveDown();
-}
-//Company
-if (formData.company) {
-  doc.text("Company Details:");
-  doc.text(`Name: ${formData.company.name || ""}`);
-  doc.text(`Address: ${formData.company.address || ""}`);
-  doc.text(`Contact: ${formData.company.contact || ""}`);
-  doc.moveDown();
-}
+
+    // Family
+    if (data.family.length) {
+      doc.fontSize(13).text("Family Details", { underline: true });
+      doc.moveDown(0.5);
+      data.family.forEach((f, i) => {
+        doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`);
+      });
+      doc.moveDown();
+    }
+
+    // Emergency
+    if (data.emergency.length) {
+      doc.fontSize(13).text("Emergency Contacts", { underline: true });
+      doc.moveDown(0.5);
+      data.emergency.forEach((e, i) => {
+        doc.fontSize(12).text(
+          `${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`
+        );
+      });
+      doc.moveDown();
+    }
+
+    // Joining
+    if (Object.keys(data.joining).length) {
+      doc.fontSize(13).text("Joining Details", { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12);
+      doc.text(`Joining Date        : ${data.joining.joiningDate || data.joining.date || ""}`);
+      doc.text(`Fees                : ${data.joining.fees || ""}`);
+      doc.text(`1st Installment     : ${data.joining.firstInstallment || ""}`);
+      doc.text(`2nd Installment     : ${data.joining.secondInstallment || ""}`);
+      doc.text(`3rd Installment     : ${data.joining.thirdInstallment || ""}`);
+      doc.text(`Notice Period       : ${data.joining.noticePeriod || ""}`);
+      doc.moveDown();
+    }
+
+    // Company
+    if (Object.keys(data.company).length) {
+      doc.fontSize(13).text("Company Details", { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12);
+      doc.text(`Name: ${data.company.name || ""}`);
+      doc.text(`Address: ${data.company.address || ""}`);
+      doc.text(`Contact: ${data.company.contact || data.company.receiver || ""}`);
+      doc.text(`Receiver Signature: ${data.company.receiverSignature || ""}`);
+      doc.text(`HR Signature: ${data.company.hrSignature || ""}`);
+      doc.moveDown();
+    }
+
     // End PDF
     doc.end();
   } catch (err) {

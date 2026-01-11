@@ -25,7 +25,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const email = formData.get("email")?.trim();
   const position = formData.get("position")?.trim();
   const dateOfApplication = formData.get("dateOfApplication")?.trim();
-  const employmentType = formData.get("employmentType")?.trim();
+  const employmentType = formData.get("employmentType")?.trim(); // single select or text
   const maritalStatus = formData.get("maritalStatus")?.trim();
   const address = formData.get("address")?.trim();
   const dob = formData.get("dob")?.trim();
@@ -33,7 +33,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
   const educationalBackground = buildObject("educationBackground");
   const employmentHistory = buildObject("employmentHistory");
-  const skillsTraining = buildObject("skillsTraining"); // fixed typo (was skillsTrainig)
+  const skillsTraining = buildObject("skillsTraining");
   const familyDetails = buildObject("familyDetails");
   const emergencyContact = buildObject("emergencyContact");
 
@@ -68,7 +68,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   }
 
   try {
-    // Send JSON data to backend
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -78,7 +77,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         email,
         position,
         dateOfApplication,
-        employmentType,
+        employmentType,              // backend will normalize to array if needed
         maritalStatus,
         address,
         dob,
@@ -88,8 +87,8 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         skills: skillsTraining,
         family: familyDetails,
         emergency: emergencyContact,
-        joining,   // ✅ fixed (was joiningDetails)
-        company    // ✅ added company object
+        joining,
+        company
       })
     });
 
@@ -98,7 +97,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
       return;
     }
 
-    // Get PDF blob and download
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -111,5 +109,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     formElement.reset();
   } catch (err) {
     console.error("❌ Fetch error:", err);
+    alert("Network error. Please try again.");
   }
 });
