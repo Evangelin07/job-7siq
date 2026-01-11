@@ -187,10 +187,7 @@ footer{
 
 <form
   id="applicationForm"
-  action="https://job-7siq.onrender.com/generate-pdf"
-  method="POST"
-  enctype="multipart/form-data"
->
+  enctype="https://job-7siq.onrender.com/generate-pdf">
 
 <!-- ================= PAGE 1 ================= -->
 <div class="page">
@@ -207,7 +204,7 @@ footer{
 
 <div class="photo">
   <img id="photoPreview" style="width:100%; height:100%; object-fit:cover;">
-<input type="file" id="photoInput" name="photo">
+<input type="file" id="photoInput" name="photo" accept="image/*" required>
 
 </div>
 
