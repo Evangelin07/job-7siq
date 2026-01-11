@@ -54,35 +54,12 @@ app.post("/generate-pdf", async (req, res) => {
   try {
     let data = req.body;
 
-    // Normalize employmentType to array for schema compatibility
-    if (data.employmentType) {
-      if (Array.isArray(data.employmentType)) {
-        // keep as is
-      } else if (typeof data.employmentType === "string" && data.employmentType.length) {
-        data.employmentType = [data.employmentType];
-      } else {
-        data.employmentType = [];
+    ["education", "employment", "skills", "family", "emergency", "joining", "company"].forEach((key) => {
+      if (typeof data[key] === "string") {
+        try { data[key] = JSON.parse(data[key]); } catch {}
       }
-    } else {
-      data.employmentType = [];
-    }
-
-    // Ensure arrays/objects are proper types (in case client sends strings)
-    const arrayKeys = ["education", "employment", "skills", "family", "emergency"];
-    arrayKeys.forEach(k => {
-      if (typeof data[k] === "string") {
-        try { data[k] = JSON.parse(data[k]); } catch { data[k] = []; }
-      }
-      if (!Array.isArray(data[k])) data[k] = [];
     });
 
-    const objectKeys = ["joining", "company"];
-    objectKeys.forEach(k => {
-      if (typeof data[k] === "string") {
-        try { data[k] = JSON.parse(data[k]); } catch { data[k] = {}; }
-      }
-      if (typeof data[k] !== "object" || data[k] === null) data[k] = {};
-    });
 
     // Save to MongoDB
     await Form.create(data);
