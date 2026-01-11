@@ -58,18 +58,19 @@ const upload = multer({ storage: multer.memoryStorage(),
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
+ let data = req.body;
 
-    const formData = req.body;
+    // ✅ Add this block immediately after req.body
+    ["education", "employment", "skills", "family", "emergency", "joining", "company"].forEach((key) => {
+      if (typeof data[key] === "string") {
+        try {
+          data[key] = JSON.parse(data[key]);
+        } catch (e) {
+          // ignore if not JSON
+        }
+      }
+    });
 
-    // Fix arrays
-    if (formData.employmentType && !Array.isArray(formData.employmentType)) {
-      formData.employmentType = [formData.employmentType];
-    }
-    if (formData.skills && !Array.isArray(formData.skills)) {
-      formData.skills = [formData.skills];
-    }
 
 
     // Save to MongoDB
