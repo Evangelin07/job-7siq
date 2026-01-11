@@ -56,12 +56,12 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         address,
         dob,
         aadhar,
-        educationalBackground,
-        employmentHistory,
-        skillsTraining,
-        familyDetails,
-        emergencyContact,
-        joiningDetails
+        education: educationalBackground,
+        employment: employmentHistory,
+        skills: skillsTraining,
+        family: familyDetails,
+        emergency: emergencyContact,
+        joining: joiningDetails
       })
     });
 
