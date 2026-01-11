@@ -7,6 +7,13 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
   const email = formData.get("email")?.trim();
+  const position = fd.get("position")?.trim();
+  const dateOfApplication = fd.get("dateOfApplication")?.trim();
+  const employmentType = fd.get("employmentType")?.trim();
+  const maritalStatus = fd.get("maritalStatus")?.trim();
+  const address = fd.get("address")?.trim();
+  const dob = fd.get("dob")?.trim();
+  const aadhar = fd.get("aadhar")?.trim();
 
   // Validation checks
   if (!fullName || !phone || !email) {

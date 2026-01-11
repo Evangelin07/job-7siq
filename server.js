@@ -151,6 +151,14 @@ if (Array.isArray(formData.skills)) {
   doc.moveDown();
 }
 
+if (formData.family?.length) {
+  doc.text("Family Details:");
+  formData.family.forEach((f, i) => {
+    doc.text(`${i + 1}. ${f.name || ""} - Relation: ${f.relation || ""} - Age: ${f.age || ""}`);
+  });
+  doc.moveDown();
+}
+
     // Emergency
     if (formData.emergency?.length) {
       doc.text("Emergency Contacts:");
@@ -160,6 +168,20 @@ if (Array.isArray(formData.skills)) {
       doc.moveDown();
     }
 
+    if (formData.joining) {
+  doc.text("Joining Details:");
+  doc.text(`Expected Date: ${formData.joining.date || ""}`);
+  doc.text(`Notice Period: ${formData.joining.noticePeriod || ""}`);
+  doc.moveDown();
+}
+
+if (formData.company) {
+  doc.text("Company Details:");
+  doc.text(`Name: ${formData.company.name || ""}`);
+  doc.text(`Address: ${formData.company.address || ""}`);
+  doc.text(`Contact: ${formData.company.contact || ""}`);
+  doc.moveDown();
+}
     // End PDF
     doc.end();
   } catch (err) {
