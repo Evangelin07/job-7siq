@@ -22,7 +22,6 @@ app.get("/", (req, res) => {
 
 /* ---------- MONGODB ---------- */
 console.log("MongoDB URI:", process.env.MONGODB_URI);
-
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB Atlas connected ✅"))
@@ -49,7 +48,6 @@ const formSchema = new mongoose.Schema({
   company: Object,
   photo: String
 });
-
 const Form = mongoose.model("Form", formSchema);
 
 /* ---------- MULTER ---------- */
@@ -60,36 +58,36 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
     const formData = { ...req.body };
 
-    // Fix arrays
+    // Convert to arrays if needed
     if (formData.employmentType && !Array.isArray(formData.employmentType)) {
       formData.employmentType = [formData.employmentType];
     }
-
     if (formData.skills && !Array.isArray(formData.skills)) {
       formData.skills = [formData.skills];
     }
 
-    // Photo
+    // Handle uploaded photo
     if (req.file) {
       formData.photo = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
     }
 
-    // Save to MongoDB
+    // Save to DB
     const form = new Form(formData);
     await form.save();
 
     // PDFKit
     const doc = new PDFDocument({ margin: 40 });
-
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=application.pdf");
     doc.pipe(res);
 
-    // Logo
-    const logoPath = path.join(__dirname, "logo.jpeg"); // file must exist
+    // Logo (safe check)
+    const logoPath = path.join(__dirname, "public/loogo.jpeg"); // <-- put your logo here
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 100 });
       doc.moveDown(2);
+    } else {
+      console.log("Logo not found at:", logoPath);
     }
 
     // Header
@@ -98,7 +96,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.fontSize(16).text("Application Form", { align: "center" });
     doc.moveDown();
 
-    // Personal details
+    // Personal info
     doc.fontSize(12);
     doc.text(`Full Name: ${formData.fullName || ""}`);
     doc.text(`Phone: ${formData.phone || ""}`);
@@ -112,11 +110,15 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.text(`Aadhar: ${formData.aadhar || ""}`);
     doc.moveDown();
 
-    // Photo
-    if (formData.photo) {
-      const img = Buffer.from(formData.photo.split(",")[1], "base64");
-      doc.image(img, { width: 120, height: 120, align: "center" });
-      doc.moveDown();
+    // Photo (safe try-catch)
+    try {
+      if (formData.photo) {
+        const img = Buffer.from(formData.photo.split(",")[1], "base64");
+        doc.image(img, { width: 120, height: 120, align: "center" });
+        doc.moveDown();
+      }
+    } catch (err) {
+      console.log("Failed to add photo:", err);
     }
 
     // Education
@@ -152,9 +154,10 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       doc.moveDown();
     }
 
+    // End PDF
     doc.end();
   } catch (err) {
-    console.error(err);
+    console.error("PDF generation error:", err);
     res.status(500).send("Server error ❌");
   }
 });
