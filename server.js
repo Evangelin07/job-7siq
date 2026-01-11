@@ -32,7 +32,7 @@ const formSchema = new mongoose.Schema({
   email: String,
   dateOfApplication: String,
   position: String,
-  employmentType: [String], // we will normalize to array
+  employmentType: [String],
   maritalStatus: String,
   address: String,
   dob: String,
@@ -43,23 +43,24 @@ const formSchema = new mongoose.Schema({
   family: Array,
   emergency: Array,
   joining: Object,
-  company: Object,
-  photo: String // not used in JSON route
+  company: Object
 });
 
 const Form = mongoose.model("Form", formSchema);
 
-/* ---------- GENERATE PDF (JSON) ---------- */
+/* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", async (req, res) => {
   try {
     let data = req.body;
 
-    ["education", "employment", "skills", "family", "emergency", "joining", "company"].forEach((key) => {
-      if (typeof data[key] === "string") {
-        try { data[key] = JSON.parse(data[key]); } catch {}
-      }
-    });
-
+    // Ensure arrays/objects exist so PDF never blank
+    data.education = data.education || [];
+    data.employment = data.employment || [];
+    data.skills = data.skills || [];
+    data.family = data.family || [];
+    data.emergency = data.emergency || [];
+    data.joining = data.joining || {};
+    data.company = data.company || {};
 
     // Save to MongoDB
     await Form.create(data);
