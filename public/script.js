@@ -44,7 +44,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
     window.URL.revokeObjectURL(url);
     alert("PDF downloaded successfully ✅");
-    this.reset();
+    formElement.reset();
 
   } catch (err) {
     console.error("❌ Fetch error:", err);
