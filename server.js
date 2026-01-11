@@ -56,8 +56,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
+    console.log("REQ BODY:", req.body);
+    console.log("REQ FILE:", req.file);
 
     const formData = { ...req.body };
 
