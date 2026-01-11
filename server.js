@@ -58,6 +58,11 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
     const formData = { ...req.body };
 
+    if (req.file) {
+    const img = req.file.buffer; // Buffer directly from multer
+    doc.image(img, { width: 120, height: 120, align: "center" });
+  }
+
     // Convert to arrays if needed
     if (formData.employmentType && !Array.isArray(formData.employmentType)) {
       formData.employmentType = [formData.employmentType];
