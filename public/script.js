@@ -2,9 +2,8 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   e.preventDefault();
 
   const formElement = this;
-  const formData = new FormData(this); // Keep FormData as is, do NOT stringify
+  const formData = new FormData(this);
 
-  // --- Validation ---
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
   const email = formData.get("email")?.trim();
@@ -25,18 +24,17 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   }
 
   try {
-    // --- Fetch FormData correctly ---
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      body: formData // Send as FormData, not JSON
-    });
+      body: formData
+});
+
 
     if (!res.ok) {
       alert("PDF generation failed ❌");
       return;
     }
 
-    // --- Download PDF ---
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
 
@@ -47,8 +45,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
     window.URL.revokeObjectURL(url);
     alert("PDF downloaded successfully ✅");
-
-    // --- Reset form after success ---
+    
     formElement.reset();
 
   } catch (err) {
