@@ -73,8 +73,9 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     res.setHeader("Content-Disposition", "attachment; filename=Application_Form.pdf");
     doc.pipe(res);
 
+    doc.pipe(res);
 
-// ✅ Insert uploaded photo
+// ✅ Insert photo if uploaded
 if (req.file) {
   try {
     doc.image(req.file.path, {
@@ -86,7 +87,6 @@ if (req.file) {
     console.error("Photo error:", err);
   }
 }
-
 
 
     // Optional logo
