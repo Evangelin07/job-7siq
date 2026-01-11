@@ -1,127 +1,162 @@
-document.getElementById("applicationForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
+app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
+  try {
+    const data = req.body;
 
-  const formElement = this;
-  const formData = new FormData(formElement);
+    // Save to MongoDB
+    const form = new Form(data);
+    await form.save();
 
-  // Build arrays from input names like education[0][degree]
-  function buildObject(prefix) {
-    const obj = {};
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith(prefix + "[")) {
-        const match = key.match(/\[(\d+)\]\[(.+)\]/);
-        if (match) {
-          const index = match[1];
-          const field = match[2];
-          if (!obj[index]) obj[index] = {};
-          obj[index][field] = value.trim();
-        }
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Application_Form.pdf"
+    );
+
+    doc.pipe(res);
+
+    // ---------- HEADER ----------
+    doc.fontSize(18).text("7S IQ PRIVATE LIMITED", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(14).text("Application Form", { align: "center" });
+    doc.moveDown(1.5);
+
+    // ---------- PHOTO ----------
+    if (req.file?.buffer) {
+      try {
+        doc.image(req.file.buffer, 430, 80, { width: 120 });
+      } catch (e) {
+        console.log("Image error:", e.message);
       }
     }
-    return Object.values(obj);
-  }
 
-  // Build main objects/arrays
-  const education = buildObject("education");
-  const employment = buildObject("employment");
-  const skills = buildObject("skills");
-  const family = buildObject("family");
-  const emergency = buildObject("emergency");
+    doc.fontSize(11);
 
-  const joining = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("joining[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
-    }
-  }
+    // ---------- BASIC DETAILS ----------
+    doc.text(`Full Name           : ${data.fullName || ""}`);
+    doc.text(`Phone Number        : ${data.phone || ""}`);
+    doc.text(`Email ID            : ${data.email || ""}`);
+    doc.text(`Position            : ${data.position || ""}`);
+    doc.text(`Date of Application : ${data.dateOfApplication || ""}`);
+    doc.text(
+      `Employment Type     : ${
+        Array.isArray(data.employmentType)
+          ? data.employmentType.join(", ")
+          : data.employmentType || ""
+      }`
+    );
+    doc.text(`Marital Status      : ${data.maritalStatus || ""}`);
+    doc.text(`Address             : ${data.address || ""}`);
+    doc.text(`DOB                 : ${data.dob || ""}`);
+    doc.text(`Aadhar Number       : ${data.aadhar || ""}`);
 
-  const company = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("company[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      company[field] = value.trim();
-    }
-  }
+    doc.moveDown();
 
-  // Basic fields
-  const fullName = formData.get("fullName")?.trim();
-  const phone = formData.get("phone")?.trim();
-  const email = formData.get("email")?.trim();
-  const position = formData.get("position")?.trim();
-  const dateOfApplication = formData.get("dateOfApplication")?.trim();
-  const employmentType = formData.getAll("employmentType"); // multiple checkboxes
-  const maritalStatus = formData.get("maritalStatus")?.trim();
-  const address = formData.get("address")?.trim();
-  const dob = formData.get("dob")?.trim();
-  const aadhar = formData.get("aadhar")?.trim();
+    // ---------- EDUCATION ----------
+    if (data.education?.length) {
+      doc.fontSize(13).text("Educational Background", { underline: true });
+      doc.moveDown(0.5);
 
-  // Validation
-  if (!fullName || !phone || !email) {
-    alert("Please fill all required fields ❗");
-    return;
-  }
-  if (!/^[0-9]{10}$/.test(phone)) {
-    alert("Phone number must be 10 digits ❗");
-    return;
-  }
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
-    alert("Enter a valid email address ❗");
-    return;
-  }
-
-  try {
-    // Send as FormData (to include photo)
-    const sendData = new FormData();
-    sendData.append("fullName", fullName);
-    sendData.append("phone", phone);
-    sendData.append("email", email);
-    sendData.append("position", position);
-    sendData.append("dateOfApplication", dateOfApplication);
-    employmentType.forEach(type => sendData.append("employmentType", type));
-    sendData.append("maritalStatus", maritalStatus);
-    sendData.append("address", address);
-    sendData.append("dob", dob);
-    sendData.append("aadhar", aadhar);
-
-    sendData.append("education", JSON.stringify(education));
-    sendData.append("employment", JSON.stringify(employment));
-    sendData.append("skills", JSON.stringify(skills));
-    sendData.append("family", JSON.stringify(family));
-    sendData.append("emergency", JSON.stringify(emergency));
-    sendData.append("joining", JSON.stringify(joining));
-    sendData.append("company", JSON.stringify(company));
-
-    // Append photo if exists
-    const photoInput = formElement.querySelector('input[name="photo"]');
-    if (photoInput && photoInput.files.length > 0) {
-      sendData.append("photo", photoInput.files[0]);
+      data.education.forEach((e, i) => {
+        doc.fontSize(11).text(
+          `${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`
+        );
+      });
+      doc.moveDown();
     }
 
-    const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
-      method: "POST",
-      body: sendData
-    });
+    // ---------- EMPLOYMENT ----------
+    if (data.employment?.length) {
+      doc.fontSize(13).text("Employment History", { underline: true });
+      doc.moveDown(0.5);
 
-    if (!res.ok) {
-      alert("PDF generation failed ❌");
-      return;
+      data.employment.forEach((e, i) => {
+        doc.fontSize(11).text(
+          `${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`
+        );
+        doc.text(`Reason: ${e.reason || ""}`);
+        doc.moveDown(0.3);
+      });
+      doc.moveDown();
     }
 
-    // Download PDF
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Application_Form.pdf";
-    a.click();
-    window.URL.revokeObjectURL(url);
+    // ---------- SKILLS ----------
+    if (data.skills?.length) {
+      doc.fontSize(13).text("Skills & Training", { underline: true });
+      doc.moveDown(0.5);
 
-    alert("PDF downloaded successfully ✅");
-    formElement.reset();
+      data.skills.forEach((s, i) => {
+        doc.fontSize(11).text(
+          `${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`
+        );
+      });
+      doc.moveDown();
+    }
 
+    // ---------- FAMILY ----------
+    if (data.family?.length) {
+      doc.fontSize(13).text("Family Details", { underline: true });
+      doc.moveDown(0.5);
+
+      data.family.forEach((f, i) => {
+        doc.fontSize(11).text(
+          `${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`
+        );
+      });
+      doc.moveDown();
+    }
+
+    // ---------- EMERGENCY ----------
+    if (data.emergency?.length) {
+      doc.fontSize(13).text("Emergency Contacts", { underline: true });
+      doc.moveDown(0.5);
+
+      data.emergency.forEach((e, i) => {
+        doc.fontSize(11).text(
+          `${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`
+        );
+      });
+      doc.moveDown();
+    }
+
+    // ---------- JOINING ----------
+    if (data.joining) {
+      doc.fontSize(13).text("Joining Details", { underline: true });
+      doc.moveDown(0.5);
+
+      doc.fontSize(11);
+      doc.text(`Joining Date        : ${data.joining.joiningDate || ""}`);
+      doc.text(`Fees                : ${data.joining.fees || ""}`);
+      doc.text(
+        `1st Installment     : ${data.joining.firstInstallment || ""}`
+      );
+      doc.text(
+        `2nd Installment     : ${data.joining.secondInstallment || ""}`
+      );
+      doc.text(
+        `3rd Installment     : ${data.joining.thirdInstallment || ""}`
+      );
+      doc.moveDown();
+    }
+
+    // ---------- COMPANY ----------
+    if (data.company) {
+      doc.fontSize(13).text("Company Details", { underline: true });
+      doc.moveDown(0.5);
+
+      doc.fontSize(11);
+      doc.text(`Company Name        : ${data.company.name || ""}`);
+      doc.text(`Receiving Person    : ${data.company.receiver || ""}`);
+      doc.text(
+        `Receiver Signature  : ${data.company.receiverSignature || ""}`
+      );
+      doc.text(`HR Signature        : ${data.company.hrSignature || ""}`);
+    }
+
+    doc.end();
   } catch (err) {
-    console.error("❌ Fetch error:", err);
-    alert("Backend not reachable ❌");
+    console.error("PDF generation error:", err);
+    res.status(500).send("PDF generation failed ❌");
   }
 });
