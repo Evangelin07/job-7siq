@@ -56,8 +56,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
-    console.log("REQ BODY:", req.body);
-    console.log("REQ FILE:", req.file);
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
     const formData = { ...req.body };
 
@@ -111,16 +111,20 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.moveDown();
 
     // Photo (safe try-catch)
-   if (req.file && req.file.buffer) {
+// ---------- PHOTO (SAFE & RENDER FRIENDLY) ----------
+if (req.file && req.file.buffer) {
   try {
+    doc.moveDown();
     doc.image(req.file.buffer, {
       width: 120,
       align: "center"
     });
     doc.moveDown();
   } catch (e) {
-    console.log("Image add failed:", e.message);
+    console.log("❌ Image render failed:", e.message);
   }
+} else {
+  console.log("⚠️ No photo uploaded");
 }
 
 
