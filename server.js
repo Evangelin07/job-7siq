@@ -151,6 +151,7 @@ if (Array.isArray(formData.skills)) {
   doc.moveDown();
 }
 
+//Family
 if (formData.family?.length) {
   doc.text("Family Details:");
   formData.family.forEach((f, i) => {
@@ -167,14 +168,14 @@ if (formData.family?.length) {
       });
       doc.moveDown();
     }
-
+//Joining
     if (formData.joining) {
   doc.text("Joining Details:");
   doc.text(`Expected Date: ${formData.joining.date || ""}`);
   doc.text(`Notice Period: ${formData.joining.noticePeriod || ""}`);
   doc.moveDown();
 }
-
+//Company
 if (formData.company) {
   doc.text("Company Details:");
   doc.text(`Name: ${formData.company.name || ""}`);
