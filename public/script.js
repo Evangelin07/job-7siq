@@ -7,7 +7,6 @@ function buildArray(prefix) {
   const obj = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith(prefix)) {
-      // Example: education[0][degree]
       const match = key.match(/\[(\d+)\]\[(\w+)\]/);
       if (match) {
         const index = match[1];
@@ -17,7 +16,10 @@ function buildArray(prefix) {
       }
     }
   }
-  return Object.values(obj); // returns array of objects
+  // Filter out rows where all fields are empty
+  return Object.values(obj).filter(row =>
+    Object.values(row).some(val => val && val.length > 0)
+  );
 }
 
 
