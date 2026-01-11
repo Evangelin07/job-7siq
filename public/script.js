@@ -35,6 +35,12 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
+  // Arrays
+  const educationalBackground = buildArray("education");
+  const employmentHistory    = buildArray("employment");
+  const skillsTraining       = buildArray("skills");
+  const familyDetails        = buildArray("family");
+  const emergencyContact     = buildArray("emergency");
 
   // Objects
   const joining = {};
