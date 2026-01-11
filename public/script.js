@@ -58,7 +58,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         aadhar,
         educationalBackground,
         employmentHistory,
-        SkillsTraining,
+        skillsTraining,
         familyDetails,
         emergencyContact,
         joiningDetails
