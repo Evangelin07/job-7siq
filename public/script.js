@@ -43,9 +43,9 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         phone,
         email,
         position,
-        dateofApplication,
+        dateOfApplication,
         employmentType,
-        matritalStatus,
+        maritalStatus,
         address,
         dob,
         aadhar
