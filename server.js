@@ -52,16 +52,16 @@ const Form = mongoose.model("Form", formSchema);
 
 /* ---------- MULTER ---------- */
 const upload = multer({ storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024}
+  limits: { fileSize: 5 * 1024 *1024}
  });
 
 /* ---------- GENERATE PDF ---------- */
-app.post("/generate-pdf", upload.none, async (req, res) => {
+app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
     console.log("BODY:", req.body);
     console.log("FILE:", req.file);
 
-    const formData = { ...req.body };
+    const formData = req.body;
 
     // Fix arrays
     if (formData.employmentType && !Array.isArray(formData.employmentType)) {
@@ -73,8 +73,7 @@ app.post("/generate-pdf", upload.none, async (req, res) => {
 
 
     // Save to MongoDB
-    const form = new Form(formData);
-    await form.save();
+    await Form.create(formData);
 
     // ---------- PDF ----------
     const doc = new PDFDocument({ margin: 40 });
@@ -114,20 +113,10 @@ app.post("/generate-pdf", upload.none, async (req, res) => {
 
     // Photo (safe try-catch)
 // ---------- PHOTO (SAFE & RENDER FRIENDLY) ----------
-if (req.file && req.file.buffer) {
-  try {
-    doc.moveDown();
-    doc.image(req.file.buffer, {
-      width: 120,
-      align: "center"
-    });
-    doc.moveDown();
-  } catch (e) {
-    console.log("❌ Image render failed:", e.message);
-  }
-} else {
-  console.log("⚠️ No photo uploaded");
-}
+    if (req.file?.buffer) {
+      doc.image(req.file.buffer, { width: 120 });
+      doc.moveDown();
+    }
 
 
     // Education
