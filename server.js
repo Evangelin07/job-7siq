@@ -138,10 +138,18 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Skills
-    if (formData.skills?.length) {
-      doc.text("Skills: " + formData.skills.join(", "));
-      doc.moveDown();
+   // ---------- SKILLS ----------
+if (Array.isArray(formData.skills)) {
+  doc.text("Skills & Training:");
+  formData.skills.forEach((s, i) => {
+    if (s.skill) {
+      doc.text(
+        `${i + 1}. ${s.skill} | Level: ${s.level || "-"} | Year: ${s.year || "-"} | Institute: ${s.institute || "-"}`
+      );
     }
+  });
+  doc.moveDown();
+}
 
     // Emergency
     if (formData.emergency?.length) {
