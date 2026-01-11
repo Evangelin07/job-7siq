@@ -3,43 +3,46 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const formElement = this;
   const formData = new FormData(formElement);
 
-function buildArray(prefix) {
-  const obj = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith(prefix)) {
-      const match = key.match(/\[(\d+)\]\[(\w+)\]/);
-      if (match) {
-        const index = match[1];
-        const field = match[2];
-        if (!obj[index]) obj[index] = {};
-        obj[index][field] = value.trim();
+  // Helper to build arrays of rows and skip empty ones
+  function buildArray(prefix) {
+    const obj = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith(prefix)) {
+        const match = key.match(/\[(\d+)\]\[(\w+)\]/);
+        if (match) {
+          const index = match[1];
+          const field = match[2];
+          if (!obj[index]) obj[index] = {};
+          obj[index][field] = value.trim();
+        }
       }
     }
+    // ✅ Only keep rows where at least one field is filled
+    return Object.values(obj).filter(row =>
+      Object.values(row).some(val => val && val.length > 0)
+    );
   }
-  // Filter out rows where all fields are empty
-  return Object.values(obj).filter(row =>
-    Object.values(row).some(val => val && val.length > 0)
-  );
-}
 
-
+  // Personal info
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
   const email = formData.get("email")?.trim();
   const position = formData.get("position")?.trim();
   const dateOfApplication = formData.get("dateOfApplication")?.trim();
-  const employmentType = formData.get("employmentType")?.trim(); // single select or text
+  const employmentType = formData.get("employmentType")?.trim();
   const maritalStatus = formData.get("maritalStatus")?.trim();
   const address = formData.get("address")?.trim();
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
+  // Arrays
   const educationalBackground = buildArray("education");
   const employmentHistory    = buildArray("employment");
   const skillsTraining       = buildArray("skills");
   const familyDetails        = buildArray("family");
   const emergencyContact     = buildArray("emergency");
 
+  // Objects
   const joining = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("joining[")) {
@@ -80,7 +83,7 @@ function buildArray(prefix) {
         email,
         position,
         dateOfApplication,
-        employmentType,              // backend will normalize to array if needed
+        employmentType,
         maritalStatus,
         address,
         dob,
