@@ -38,6 +38,7 @@ const formSchema = new mongoose.Schema({
   dob: String,
   aadhar: String,
   education: Array,
+  bank: Object,
   employment: Array,
   skills: Array,
   family: Array,
@@ -55,6 +56,7 @@ app.post("/generate-pdf", async (req, res) => {
 
     // Ensure arrays/objects exist so PDF never blank
     data.education = data.education || [];
+    data.bank = data.bank || {};
     data.employment = data.employment || [];
     data.skills = data.skills || [];
     data.family = data.family || [];
@@ -110,6 +112,20 @@ app.post("/generate-pdf", async (req, res) => {
       });
       doc.moveDown();
     }
+
+    // Bank Details (AFTER EDUCATION)
+if (Object.keys(data.bank).length) {
+  doc.fontSize(13).text("Bank Details", { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(12);
+  doc.text(`Bank Name        : ${data.bank.bankName || ""}`);
+  doc.text(`Account Holder   : ${data.bank.accountHolder || ""}`);
+  doc.text(`Account Number   : ${data.bank.accountNumber || ""}`);
+  doc.text(`IFSC Code        : ${data.bank.ifsc || ""}`);
+  doc.text(`Branch           : ${data.bank.branch || ""}`);
+  doc.moveDown();
+}
+
 
     // Employment
     if (data.employment.length) {

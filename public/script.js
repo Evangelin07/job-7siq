@@ -37,6 +37,16 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
   // Arrays
   const educationalBackground = buildArray("education");
+
+  // Bank details
+const bank = {};
+for (const [key, value] of formData.entries()) {
+  if (key.startsWith("bank[")) {
+    const field = key.match(/\[(\w+)\]/)[1];
+    bank[field] = value.trim();
+  }
+}
+
   const employmentHistory    = buildArray("employment");
   const skillsTraining       = buildArray("skills");
   const familyDetails        = buildArray("family");
@@ -89,6 +99,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         dob,
         aadhar,
         education: educationalBackground,
+        bank,
         employment: employmentHistory,
         skills: skillsTraining,
         family: familyDetails,
