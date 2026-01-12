@@ -27,12 +27,12 @@ mongoose
 
 /* ---------- SCHEMA ---------- */
 const formSchema = new mongoose.Schema({
-  fullName: String,
-  phone: String,
-  email: String,
+  fullName: { type: String, required: true },
+  phone: { type: String, required: true },
+  email: { type: String, required: true },
   dateOfApplication: String,
   position: String,
-  employmentType: [String],
+  employmentType: String, // ✅ changed from [String] to String
   maritalStatus: String,
   address: String,
   dob: String,
@@ -54,7 +54,7 @@ app.post("/generate-pdf", async (req, res) => {
   try {
     let data = req.body;
 
-    // Ensure arrays/objects exist so PDF never blank
+    // Ensure arrays/objects exist
     data.education = data.education || [];
     data.bank = data.bank || {};
     data.employment = data.employment || [];
@@ -64,8 +64,15 @@ app.post("/generate-pdf", async (req, res) => {
     data.joining = data.joining || {};
     data.company = data.company || {};
 
+    // 🔍 Clean empty arrays/objects before saving
+    Object.keys(data).forEach(key => {
+      if (Array.isArray(data[key]) && data[key].length === 0) delete data[key];
+      if (typeof data[key] === "object" && !Array.isArray(data[key]) && Object.keys(data[key]).length === 0) delete data[key];
+    });
+
     // Save to MongoDB
-    await Form.create(data);
+    const savedForm = await Form.create(data);
+    console.log("✅ Saved to MongoDB:", savedForm);
 
     // ---------- PDF ----------
     const doc = new PDFDocument({ margin: 40, size: "A4" });
@@ -94,7 +101,7 @@ app.post("/generate-pdf", async (req, res) => {
     doc.text(`Email: ${data.email || ""}`);
     doc.text(`Position: ${data.position || ""}`);
     doc.text(`Date of Application: ${data.dateOfApplication || ""}`);
-    doc.text(`Employment Type: ${Array.isArray(data.employmentType) ? data.employmentType.join(", ") : ""}`);
+    doc.text(`Employment Type: ${data.employmentType || ""}`);
     doc.text(`Marital Status: ${data.maritalStatus || ""}`);
     doc.text(`Address: ${data.address || ""}`);
     doc.text(`DOB: ${data.dob || ""}`);
@@ -102,7 +109,7 @@ app.post("/generate-pdf", async (req, res) => {
     doc.moveDown();
 
     // Education
-    if (data.education.length) {
+    if (data.education && data.education.length) {
       doc.fontSize(13).text("Educational Background", { underline: true });
       doc.moveDown(0.5);
       data.education.forEach((e, i) => {
@@ -113,22 +120,21 @@ app.post("/generate-pdf", async (req, res) => {
       doc.moveDown();
     }
 
-    // Bank Details (AFTER EDUCATION)
-if (Object.keys(data.bank).length) {
-  doc.fontSize(13).text("Bank Details", { underline: true });
-  doc.moveDown(0.5);
-  doc.fontSize(12);
-  doc.text(`Bank Name        : ${data.bank.bankName || ""}`);
-  doc.text(`Account Holder   : ${data.bank.accountHolder || ""}`);
-  doc.text(`Account Number   : ${data.bank.accountNumber || ""}`);
-  doc.text(`IFSC Code        : ${data.bank.ifsc || ""}`);
-  doc.text(`Branch           : ${data.bank.branch || ""}`);
-  doc.moveDown();
-}
-
+    // Bank Details
+    if (data.bank && Object.keys(data.bank).length) {
+      doc.fontSize(13).text("Bank Details", { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12);
+      doc.text(`Bank Name        : ${data.bank.bankName || ""}`);
+      doc.text(`Account Holder   : ${data.bank.accountHolder || ""}`);
+      doc.text(`Account Number   : ${data.bank.accountNumber || ""}`);
+      doc.text(`IFSC Code        : ${data.bank.ifsc || ""}`);
+      doc.text(`Branch           : ${data.bank.branch || ""}`);
+      doc.moveDown();
+    }
 
     // Employment
-    if (data.employment.length) {
+    if (data.employment && data.employment.length) {
       doc.fontSize(13).text("Employment History", { underline: true });
       doc.moveDown(0.5);
       data.employment.forEach((e, i) => {
@@ -140,7 +146,7 @@ if (Object.keys(data.bank).length) {
     }
 
     // Skills
-    if (data.skills.length) {
+    if (data.skills && data.skills.length) {
       doc.fontSize(13).text("Skills & Training", { underline: true });
       doc.moveDown(0.5);
       data.skills.forEach((s, i) => {
@@ -152,7 +158,7 @@ if (Object.keys(data.bank).length) {
     }
 
     // Family
-    if (data.family.length) {
+    if (data.family && data.family.length) {
       doc.fontSize(13).text("Family Details", { underline: true });
       doc.moveDown(0.5);
       data.family.forEach((f, i) => {
@@ -162,7 +168,7 @@ if (Object.keys(data.bank).length) {
     }
 
     // Emergency
-    if (data.emergency.length) {
+    if (data.emergency && data.emergency.length) {
       doc.fontSize(13).text("Emergency Contacts", { underline: true });
       doc.moveDown(0.5);
       data.emergency.forEach((e, i) => {
@@ -174,7 +180,7 @@ if (Object.keys(data.bank).length) {
     }
 
     // Joining
-    if (Object.keys(data.joining).length) {
+    if (data.joining && Object.keys(data.joining).length) {
       doc.fontSize(13).text("Joining Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -188,7 +194,7 @@ if (Object.keys(data.bank).length) {
     }
 
     // Company
-    if (Object.keys(data.company).length) {
+    if (data.company && Object.keys(data.company).length) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
