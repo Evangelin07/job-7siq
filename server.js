@@ -73,7 +73,7 @@ app.post("/generate-pdf", async (req, res) => {
     doc.pipe(res);
 
     // Optional logo
-    const logoPath = path.join(__dirname, "public/logo.jpeg");
+    const logoPath = path.join(__dirname, "public/loogo.jpeg");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 100 });
       doc.moveDown(2);
