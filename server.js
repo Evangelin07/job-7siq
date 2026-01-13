@@ -4,6 +4,7 @@ const PDFDocument = require("pdfkit");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 require("dotenv").config();
 
 const app = express();
@@ -25,6 +26,17 @@ mongoose
   .then(() => console.log("MongoDB Atlas connected ✅"))
   .catch(err => console.error("MongoDB connection error:", err));
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+const upload = multer({ storage });
+
+
 /* ---------- SCHEMA ---------- */
 const formSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
@@ -44,7 +56,8 @@ const formSchema = new mongoose.Schema({
   family: Array,
   emergency: Array,
   joining: Object,
-  company: Object
+  company: Object,
+  photo: String
 });
 
 const Form = mongoose.model("Form", formSchema);
@@ -86,6 +99,13 @@ app.post("/generate-pdf", async (req, res) => {
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 40, 30, { width: 100 });
       doc.moveDown(2);
+    }
+
+        if (req.file && fs.existsSync(req.file.path)) {
+      doc.image(req.file.path, 450, 30, {
+        width: 100,
+        height: 100
+      });
     }
 
     // Header
