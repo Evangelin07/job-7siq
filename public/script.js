@@ -83,30 +83,29 @@ for (const [key, value] of formData.entries()) {
     return;
   }
 
+  // text fields
+  [
+    "fullName","phone","email","position","dateOfApplication",
+    "employmentType","maritalStatus","address","dob","aadhar"
+  ].forEach(f => formData.append(f, rawFormData.get(f)));
+
+  // photo ⭐⭐⭐
+  formData.append("photo", rawFormData.get("photo"));
+
+  // complex data → JSON
+  formData.append("education", JSON.stringify(education));
+  formData.append("employment", JSON.stringify(employment));
+  formData.append("skills", JSON.stringify(skills));
+  formData.append("family", JSON.stringify(family));
+  formData.append("emergency", JSON.stringify(emergency));
+  formData.append("bank", JSON.stringify(bank));
+  formData.append("joining", JSON.stringify(joining));
+  formData.append("company", JSON.stringify(company));
+
   try {
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullName,
-        phone,
-        email,
-        position,
-        dateOfApplication,
-        employmentType,
-        maritalStatus,
-        address,
-        dob,
-        aadhar,
-        education: educationalBackground,
-        bank,
-        employment: employmentHistory,
-        skills: skillsTraining,
-        family: familyDetails,
-        emergency: emergencyContact,
-        joining,
-        company
-      })
+      body: formData   // ⭐ IMPORTANT
     });
 
     if (!res.ok) {
@@ -116,16 +115,10 @@ for (const [key, value] of formData.entries()) {
 
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Application_Form.pdf";
-    a.click();
-    window.URL.revokeObjectURL(url);
+    window.open(url, "_blank");
 
-    alert("PDF downloaded successfully ✅");
-    formElement.reset();
   } catch (err) {
-    console.error("❌ Fetch error:", err);
-    alert("Network error. Please try again.");
+    console.error(err);
+    alert("Server error ❌");
   }
 });
