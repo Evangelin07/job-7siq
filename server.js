@@ -65,10 +65,6 @@ const formSchema = new mongoose.Schema({
 
 const Form = mongoose.model("Form", formSchema);
 
-
-/* ---------- GENERATE PDF ---------- */
-app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
-  try {
 const parseJSON = (value, defaultValue) => {
   if (!value) return defaultValue;
     try {
@@ -79,6 +75,11 @@ const parseJSON = (value, defaultValue) => {
 
     }
 };
+
+
+/* ---------- GENERATE PDF ---------- */
+app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
+  try {
 
     // Ensure arrays/objects exist
        const data = {
@@ -169,10 +170,10 @@ if (req.file) {
       doc.moveDown(0.5);
       doc.fontSize(12);
       Object.entries({
-        "Bank Name": data.bank.bankName,
-        "Account Number": data.bank.accountNumber,
-        "IFSC Code": data.bank.ifsc,
-        "Branch": data.bank.branch
+        "Bank Name": data.bank.bankName || "",
+        "Account Number": data.bank.accountNumber || "",
+        "IFSC Code": data.bank.ifsc || "",
+        "Branch": data.bank.branch || ""
       }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
@@ -201,10 +202,10 @@ if (req.file) {
       Object.entries({
         "Joining Date": data.joining.joiningDate || data.joining.date,
         "Fees": data.joining.fees,
-        "1st Installment": data.joining.firstInstallment,
-        "2nd Installment": data.joining.secondInstallment,
-        "3rd Installment": data.joining.thirdInstallment,
-        "Notice Period": data.joining.noticePeriod
+        "1st Installment": data.joining.firstInstallment || "",
+        "2nd Installment": data.joining.secondInstallment || "",
+        "3rd Installment": data.joining.thirdInstallment || "",
+        "Notice Period": data.joining.noticePeriod || ""
       }).forEach(([label, value]) => doc.fontSize(12).text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
@@ -213,11 +214,11 @@ if (req.file) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
       Object.entries({
-        "Name": data.company.name,
-        "Address": data.company.address,
-        "Contact": data.company.contact || data.company.receiver,
-        "Receiver Signature": data.company.receiverSignature,
-        "HR Signature": data.company.hrSignature
+        "Name": data.company.name || "",
+        "Address": data.company.address || "",
+        "Contact": data.company.contact || data.company.receiver || "",
+        "Receiver Signature": data.company.receiverSignature || "",
+        "HR Signature": data.company.hrSignature || ""
       }).forEach(([label, value]) => doc.fontext(12).text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
