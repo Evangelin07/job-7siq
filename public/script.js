@@ -57,7 +57,9 @@ function cleanFormData(prefix) {
 }
 
 // Clean up raw keys
-["education", "employment", "skills", "family", "emergency", "bank[", "joining[", "company["].forEach(cleanFormData);
+["education", "employment", "skills", "family", "emergency"].forEach(cleanFormData);
+["bank[", "joining[", "company["].forEach(cleanFormData);
+
 
   // Arrays
 formData.set("education", JSON.stringify(buildArray("education")));
@@ -65,6 +67,10 @@ formData.set("education", JSON.stringify(buildArray("education")));
   formData.set("skills", JSON.stringify(buildArray("skills")));
   formData.set("family", JSON.stringify(buildArray("family")));
   formData.set("emergency", JSON.stringify(buildArray("emergency")));
+
+  formData.set("bank", JSON.stringify(buildObject("bank[")));
+formData.set("joining", JSON.stringify(buildObject("joining[")));
+formData.set("company", JSON.stringify(buildObject("company[")));
 
 
   // Bank, Joining, Company objects
