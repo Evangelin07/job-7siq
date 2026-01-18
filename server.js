@@ -69,9 +69,17 @@ const Form = mongoose.model("Form", formSchema);
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
-        const parse = (v, d) => {
-      try { return JSON.parse(v); } catch { return d; }
-    };
+const safeParse = (value, defaultValue) => {
+  if (!value) return defaultValue;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return defaultValue;
+    }
+  }
+  return value; // Already object/array
+};
 
     // Ensure arrays/objects exist
        const data = {
