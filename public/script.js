@@ -49,11 +49,10 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
     if (!fullName || !phone || !email || !position ||
     !dateOfApplication ||
-    !employmentType ||
-    !maritalStatus ||
     !address ||
     !dob ||
-    !aadhar ) {
+    !aadhar ||
+    !maritalStatus) {
     alert("Please fill all required fields ❗");
     return;
   }
@@ -83,58 +82,27 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     return;
   }
 
-/* =========================
-     BUILD ARRAYS & OBJECTS
-  ========================== */
+ formData.set("education", JSON.stringify(buildArray("education")));
+  formData.set("employment", JSON.stringify(buildArray("employment")));
+  formData.set("skills", JSON.stringify(buildArray("skills")));
+  formData.set("family", JSON.stringify(buildArray("family")));
+  formData.set("emergency", JSON.stringify(buildArray("emergency")));
 
-  const education = buildArray("education");
-  const employment = buildArray("employment");
-  const skills = buildArray("skills");
-  const family = buildArray("family");
-  const emergency = buildArray("emergency");
+  // Build objects
+  formData.set("bank", JSON.stringify(buildObject("bank[")));
+  formData.set("joining", JSON.stringify(buildObject("joining[")));
+  formData.set("company", JSON.stringify(buildObject("company[")));
 
-  const bank = buildObject("bank[");
-  const joining = buildObject("joining[");
-  const company = buildObject("company[");
-
-  // Set JSON values
-  formData.set("education", JSON.stringify(education));
-  formData.set("employment", JSON.stringify(employment));
-  formData.set("skills", JSON.stringify(skills));
-  formData.set("family", JSON.stringify(family));
-  formData.set("emergency", JSON.stringify(emergency));
-  formData.set("bank", JSON.stringify(bank));
-  formData.set("joining", JSON.stringify(joining));
-  formData.set("company", JSON.stringify(company));
-
-   /* =========================
-     REMOVE RAW DUPLICATE FIELDS
-  ========================== */
-
-  [
-    "education",
-    "employment",
-    "skills",
-    "family",
-    "emergency",
-    "bank",
-    "joining",
-    "company"
-  ].forEach(prefix => {
-    for (const key of [...formData.keys()]) {
-      if (key.startsWith(prefix + "[")) {
-        formData.delete(key);
-      }
-    }
-  });
-
-  /* =========================
-     DEBUG (OPTIONAL)
-  ========================== */
-  console.log("Sending data to backend:");
-  for (let pair of formData.entries()) {
-    console.log(pair[0], pair[1]);
-  }
+  // Debug: Check what we are sending
+  console.log("FormData arrays/objects ready to send:");
+  console.log("Education:", formData.get("education"));
+  console.log("Bank:", formData.get("bank"));
+  console.log("Employment:", formData.get("employment"));
+  console.log("Skills:", formData.get("skills"));
+  console.log("Family:", formData.get("family"));
+  console.log("Emergency:", formData.get("emergency"));
+  console.log("Joining:", formData.get("joining"));
+  console.log("Company:", formData.get("company"));
 
   
   try {

@@ -218,7 +218,7 @@ if (req.file) {
         "Contact": data.company.contact || data.company.receiver,
         "Receiver Signature": data.company.receiverSignature,
         "HR Signature": data.company.hrSignature
-      }).forEach(([label, value]) => doc.fontSize(12).text(`${label}: ${value || ""}`));
+      }).forEach(([label, value]) => doc.fontext(12).text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
 
