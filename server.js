@@ -87,7 +87,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       company: parse(req.body.company, {}),
 
       // ✅ photo status
-      photo: req.file ? req.file.filename : ""
+      photo: req.file ? "uploaded" : ""
     };
 
 
@@ -108,8 +108,8 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       doc.moveDown(2);
     }
 
-      if (req.file) {
-      doc.image(req.file.path, 450, 30, { width: 100, height: 120 });
+      if (req.file && req.file.buffer) {
+      doc.image(req.file.buffer, 450, 30, { width: 100, height: 120 });
     }
     doc.moveDown(4);
     // Header
@@ -145,7 +145,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Bank Details
-    if (data.bank.length) {
+    if (Object.keys(data.bank).length) {
       doc.fontSize(13).text("Bank Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -204,7 +204,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Joining
-    if (data.joining.length) {
+    if (Object.keys(data.joining).length) {
       doc.fontSize(13).text("Joining Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -218,7 +218,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Company
-    if (data.company.length) {
+    if (Object.keys(data.company).length) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
