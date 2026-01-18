@@ -158,6 +158,7 @@ if (req.file) {
           `${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`
         );
       });
+      
       doc.moveDown();
     }
 
