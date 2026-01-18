@@ -66,7 +66,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     alert("Aadhar must be 12 digits ❗");
     return;
   }
-  if (!employmentType.length) {
+  if (!employmentType) {
     alert("Please select Employment Type ❗");
     return;
   }
