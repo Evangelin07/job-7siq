@@ -129,3 +129,17 @@ for (const [key, value] of formData.entries()) {
     alert("Network error. Please try again.");
   }
 });
+
+document
+  .getElementById("photoInput")
+  .addEventListener("change", function (e) {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      document.getElementById("photoPreview").src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
