@@ -49,6 +49,15 @@ formData.set("employmentType", employmentType);
     alert("Enter a valid email address ❗");
     return;
   }
+  // Remove raw keys before setting JSON versions
+function cleanFormData(prefix) {
+  for (const key of Array.from(formData.keys())) {
+    if (key.startsWith(prefix)) formData.delete(key);
+  }
+}
+
+// Clean up raw keys
+["education", "employment", "skills", "family", "emergency", "bank[", "joining[", "company["].forEach(cleanFormData);
 
   // Arrays
 formData.set("education", JSON.stringify(buildArray("education")));
