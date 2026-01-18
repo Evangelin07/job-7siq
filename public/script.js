@@ -29,7 +29,9 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const email = formData.get("email")?.trim();
   const position = formData.get("position")?.trim();
   const dateOfApplication = formData.get("dateOfApplication")?.trim();
-  const employmentType = formData.get("employmentType")?.trim();
+  const employmentTypeElems = formElement.querySelectorAll('input[name="employmentType"]:checked');
+const employmentType = Array.from(employmentTypeElems).map(el => el.value).join(", ");
+formData.set("employmentType", employmentType);
   const maritalStatus = formData.get("maritalStatus")?.trim();
   const address = formData.get("address")?.trim();
   const dob = formData.get("dob")?.trim();
@@ -71,6 +73,11 @@ formData.set("education", JSON.stringify(buildArray("education")));
   formData.set("bank", JSON.stringify(buildObject("bank[")));
   formData.set("joining", JSON.stringify(buildObject("joining[")));
   formData.set("company", JSON.stringify(buildObject("company[")));
+
+  console.log("FormData preview:");
+for (const [key, value] of formData.entries()) {
+  console.log(key, value);
+}
 
   try {
     // ✅ Send FormData directly, do NOT set Content-Type
