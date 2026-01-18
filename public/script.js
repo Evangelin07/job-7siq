@@ -88,26 +88,7 @@ for (const [key, value] of formData.entries()) {
   try {
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      body: formData({
-        fullName,
-        phone,
-        email,
-        position,
-        dateOfApplication,
-        employmentType,
-        maritalStatus,
-        address,
-        dob,
-        aadhar,
-        education: educationalBackground,
-        bank,
-        employment: employmentHistory,
-        skills: skillsTraining,
-        family: familyDetails,
-        emergency: emergencyContact,
-        joining,
-        company
-      })
+      body: formData
     });
 
     if (!res.ok) {
