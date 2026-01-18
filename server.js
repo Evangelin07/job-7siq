@@ -26,29 +26,23 @@ mongoose
   .then(() => console.log("MongoDB Atlas connected ✅"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage()  });
 
 
 /* ---------- SCHEMA ---------- */
+
 const formSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  phone: { type: String, required: true },
-  email: { type: String, required: true },
+  fullName: String,
+  phone: String,
+  email: String,
   dateOfApplication: String,
   position: String,
-  employmentType: String, // ✅ changed from [String] to String
+  employmentType: String,
   maritalStatus: String,
   address: String,
   dob: String,
   aadhar: String,
+
   education: Array,
   bank: Object,
   employment: Array,
@@ -58,34 +52,47 @@ const formSchema = new mongoose.Schema({
   joining: Object,
   company: Object,
   photo: String
-});
+}, { timestamps: true });
 
 const Form = mongoose.model("Form", formSchema);
+
 
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
-    let data = req.body;
+        const parse = (v, d) => {
+      try { return JSON.parse(v); } catch { return d; }
+    };
 
     // Ensure arrays/objects exist
-    data.education = data.education || [];
-    data.bank = data.bank || {};
-    data.employment = data.employment || [];
-    data.skills = data.skills || [];
-    data.family = data.family || [];
-    data.emergency = data.emergency || [];
-    data.joining = data.joining || {};
-    data.company = data.company || {};
+       const data = {
+      fullName: req.body.fullName,
+      phone: req.body.phone,
+      email: req.body.email,
+      position: req.body.position,
+      dateOfApplication: req.body.dateOfApplication,
+      employmentType: req.body.employmentType,
+      maritalStatus: req.body.maritalStatus,
+      address: req.body.address,
+      dob: req.body.dob,
+      aadhar: req.body.aadhar,
 
-    // 🔍 Clean empty arrays/objects before saving
-    Object.keys(data).forEach(key => {
-      if (Array.isArray(data[key]) && data[key].length === 0) delete data[key];
-      if (typeof data[key] === "object" && !Array.isArray(data[key]) && Object.keys(data[key]).length === 0) delete data[key];
-    });
+      education: parse(req.body.education, []),
+      bank: parse(req.body.bank, {}),
+      employment: parse(req.body.employment, []),
+      skills: parse(req.body.skills, []),
+      family: parse(req.body.family, []),
+      emergency: parse(req.body.emergency, []),
+      joining: parse(req.body.joining, {}),
+      company: parse(req.body.company, {}),
+
+      // ✅ photo status
+      photo: req.file ? req.file.filename : ""
+    };
+
 
     // Save to MongoDB
-    const savedForm = await Form.create(data);
-    console.log("✅ Saved to MongoDB:", savedForm);
+    await Form.create(data);
 
     // ---------- PDF ----------
     const doc = new PDFDocument({ margin: 40, size: "A4" });
@@ -126,7 +133,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     doc.moveDown();
 
     // Education
-    if (data.education && data.education.length) {
+    if (data.education.length) {
       doc.fontSize(13).text("Educational Background", { underline: true });
       doc.moveDown(0.5);
       data.education.forEach((e, i) => {
@@ -138,7 +145,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Bank Details
-    if (data.bank && Object.keys(data.bank).length) {
+    if (data.bank.length) {
       doc.fontSize(13).text("Bank Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -151,7 +158,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Employment
-    if (data.employment && data.employment.length) {
+    if (data.employment.length) {
       doc.fontSize(13).text("Employment History", { underline: true });
       doc.moveDown(0.5);
       data.employment.forEach((e, i) => {
@@ -163,7 +170,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Skills
-    if (data.skills && data.skills.length) {
+    if (data.skills.length) {
       doc.fontSize(13).text("Skills & Training", { underline: true });
       doc.moveDown(0.5);
       data.skills.forEach((s, i) => {
@@ -175,7 +182,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Family
-    if (data.family && data.family.length) {
+    if (data.family.length) {
       doc.fontSize(13).text("Family Details", { underline: true });
       doc.moveDown(0.5);
       data.family.forEach((f, i) => {
@@ -185,7 +192,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Emergency
-    if (data.emergency && data.emergency.length) {
+    if (data.emergency.length) {
       doc.fontSize(13).text("Emergency Contacts", { underline: true });
       doc.moveDown(0.5);
       data.emergency.forEach((e, i) => {
@@ -197,7 +204,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Joining
-    if (data.joining && Object.keys(data.joining).length) {
+    if (data.joining.length) {
       doc.fontSize(13).text("Joining Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -211,7 +218,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
     }
 
     // Company
-    if (data.company && Object.keys(data.company).length) {
+    if (data.company.length) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
