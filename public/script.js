@@ -1,6 +1,14 @@
 document.getElementById("applicationForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
   const formElement = this;
+
+  // ✅ STEP 1: browser default validation
+  if (!formElement.checkValidity()) {
+    formElement.reportValidity(); // 🔥 "Please fill out this field"
+    return;
+  }
+
+  // ✅ STEP 2: prevent submit AFTER validation
+  e.preventDefault();
   const formData = new FormData(formElement);
 
   // Helper to build arrays of rows and skip empty ones
@@ -47,15 +55,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
-    if (!fullName || !phone || !email || !position ||
-    !dateOfApplication ||
-    !address ||
-    !dob ||
-    !aadhar ||
-    !maritalStatus) {
-    alert("Please fill all required fields ❗");
-    return;
-  }
   if (!/^[0-9]{10}$/.test(phone)) {
     alert("Phone number must be 10 digits ❗");
     return;
