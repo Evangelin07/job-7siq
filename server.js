@@ -148,55 +148,67 @@ if (req.file) {
       "Address": data.address,
       "DOB": data.dob,
       "Aadhar": data.aadhar
-    }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
+    }).forEach(([label, value]) => {
+      if (value && value.trim() !== "") doc.text(`${label}: ${value}`);
+    });
+
     doc.moveDown();
 
     // Helper to render arrays
     const renderArray = (title, array, formatter) => {
       if (Array.isArray(array) && array.length) {
+        const filtered = array.filter(item =>
+          Object.values(item).some(val => val && val.trim() !== "")
+        );
+        if (filtered.length === 0) return;
+
         doc.fontSize(13).text(title, { underline: true });
         doc.moveDown(0.5);
-        array.forEach((item, i) => formatter(item, i));
+        filtered.forEach((item, i) => formatter(item, i));
         doc.moveDown();
       }
     };
 
-    renderArray("Educational Background", data.education, (e, i) =>
-      doc.fontSize(12).text(`${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`)
-    );
+    renderArray("Educational Background", data.education, (e, i) => {
+      doc.fontSize(12).text(`${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`);
+    });
 
-    if (data.bank && Object.keys(data.bank).length) {
+    if (data.bank && Object.values(data.bank).some(val => val && val.trim() !== "")) {
       doc.fontSize(13).text("Bank Details", { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(12);
       Object.entries({
         "Bank Name": data.bank.bankName || "",
         "Account Number": data.bank.accountNumber || "",
         "IFSC Code": data.bank.ifsc || "",
         "Branch": data.bank.branch || ""
-      }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
+      }).forEach(([label, value]) => {
+        if (value && value.trim() !== "") doc.fontSize(12).text(`${label}: ${value}`);
+      });
       doc.moveDown();
     }
 
     renderArray("Employment History", data.employment, (e, i) => {
-      doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
-      doc.text(`Reason: ${e.reason || ""}`);
-      doc.moveDown(0.3);
+      if (Object.values(e).some(val => val && val.trim() !== "")) {
+        doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
+        if (e.reason) doc.text(`Reason: ${e.reason}`);
+        doc.moveDown(0.3);
+      }
     });
 
-    renderArray("Skills & Training", data.skills, (s, i) =>
-      doc.fontSize(12).text(`${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`)
-    );
+    renderArray("Skills & Training", data.skills, (s, i) => {
+      doc.fontSize(12).text(`${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`);
+    });
 
-    renderArray("Family Details", data.family, (f, i) =>
-      doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`)
-    );
+    renderArray("Family Details", data.family, (f, i) => {
+      doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`);
+    });
 
-    renderArray("Emergency Contacts", data.emergency, (e, i) =>
-      doc.fontSize(12).text(`${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`)
-    );
 
-    if (data.joining && Object.keys(data.joining).length) {
+   renderArray("Emergency Contacts", data.emergency, (e, i) => {
+      doc.fontSize(12).text(`${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`);
+    });
+
+    if (data.joining && Object.values(data.joining).some(val => val && val.trim() !== "")) {
       doc.fontSize(13).text("Joining Details", { underline: true });
       doc.moveDown(0.5);
       Object.entries({
@@ -206,11 +218,13 @@ if (req.file) {
         "2nd Installment": data.joining.secondInstallment || "",
         "3rd Installment": data.joining.thirdInstallment || "",
         "Notice Period": data.joining.noticePeriod || ""
-      }).forEach(([label, value]) => doc.fontSize(12).text(`${label}: ${value || ""}`));
+      }).forEach(([label, value]) => {
+        if (value && value.trim() !== "") doc.fontSize(12).text(`${label}: ${value}`);
+      });
       doc.moveDown();
     }
 
-    if (data.company && Object.keys(data.company).length) {
+    if (data.company && Object.values(data.company).some(val => val && val.trim() !== "")) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
       Object.entries({
@@ -219,9 +233,12 @@ if (req.file) {
         "Contact": data.company.contact || data.company.receiver || "",
         "Receiver Signature": data.company.receiverSignature || "",
         "HR Signature": data.company.hrSignature || ""
-      }).forEach(([label, value]) => doc.fontext(12).text(`${label}: ${value || ""}`));
+      }).forEach(([label, value]) => {
+        if (value && value.trim() !== "") doc.fontSize(12).text(`${label}: ${value}`);
+      });
       doc.moveDown();
     }
+
 
     doc.end();
   } catch (err) {
