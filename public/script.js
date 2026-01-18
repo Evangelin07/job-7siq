@@ -35,42 +35,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
-  // Arrays
-  const educationalBackground = buildArray("education");
-
-  // Bank details
-const bank = {};
-for (const [key, value] of formData.entries()) {
-  if (key.startsWith("bank[")) {
-    const field = key.match(/\[(\w+)\]/)[1];
-    bank[field] = value.trim();
-  }
-}
-
-  const employmentHistory    = buildArray("employment");
-  const skillsTraining       = buildArray("skills");
-  const familyDetails        = buildArray("family");
-  const emergencyContact     = buildArray("emergency");
-
-  // Objects
-  const joining = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("joining[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
-    }
-  }
-
-  const company = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("company[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      company[field] = value.trim();
-    }
-  }
-
-  // Validation checks
-  if (!fullName || !phone || !email) {
+    if (!fullName || !phone || !email) {
     alert("Please fill all required fields ❗");
     return;
   }
@@ -83,30 +48,49 @@ for (const [key, value] of formData.entries()) {
     return;
   }
 
+  // Arrays
+ formData.set("education", JSON.stringify(buildArray("education")));
+
+  // Bank details
+const bank = {};
+for (const [key, value] of formData.entries()) {
+  if (key.startsWith("bank[")) {
+    const field = key.match(/\[(\w+)\]/)[1];
+    bank[field] = value.trim();
+  }
+}
+formData.set("bank", JSON.stringify(bank));
+
+  formData.set("employment", JSON.stringify(buildArray("employment")));
+  formData.set("skills", JSON.stringify(buildArray("skills")));
+  formData.set("family", JSON.stringify(buildArray("family")));
+  formData.set("emergency", JSON.stringify(buildArray("emergency")));
+
+
+  // Objects
+  const joining = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("joining[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      joining[field] = value.trim();
+    }
+  }
+ formData.set("joining", JSON.stringify(joining));
+ 
+  const company = {};
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("company[")) {
+      const field = key.match(/\[(\w+)\]/)[1];
+      company[field] = value.trim();
+    }
+  }
+ formData.set("company", JSON.stringify(company));
+
   try {
+    // ✅ Send FormData directly, do NOT set Content-Type
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullName,
-        phone,
-        email,
-        position,
-        dateOfApplication,
-        employmentType,
-        maritalStatus,
-        address,
-        dob,
-        aadhar,
-        education: educationalBackground,
-        bank,
-        employment: employmentHistory,
-        skills: skillsTraining,
-        family: familyDetails,
-        emergency: emergencyContact,
-        joining,
-        company
-      })
+      body: formData
     });
 
     if (!res.ok) {
