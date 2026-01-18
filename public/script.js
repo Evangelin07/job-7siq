@@ -62,7 +62,7 @@ formData.set("education", JSON.stringify(buildArray("education")));
     for (const [key, value] of formData.entries()) {
       if (key.startsWith(prefix)) {
         const match = key.match(/\[(\w+)\]/);
-        if (match) obj[match[1]] = value.trim();
+        if (match && value.trim()) obj[match[1]] = value.trim();
       }
     }
     return obj;
