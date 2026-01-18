@@ -23,6 +23,18 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     );
   }
 
+    function buildObject(prefix) {
+    const obj = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith(prefix)) {
+        const match = key.match(/\[(\w+)\]/);
+        if (match && value.trim()) obj[match[1]] = value.trim();
+      }
+    }
+    return obj;
+  }
+
+
   // Personal info
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
@@ -48,30 +60,29 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     return;
   }
 
-  // Arrays
-formData.set("education", JSON.stringify(buildArray("education")));
+ formData.set("education", JSON.stringify(buildArray("education")));
   formData.set("employment", JSON.stringify(buildArray("employment")));
   formData.set("skills", JSON.stringify(buildArray("skills")));
   formData.set("family", JSON.stringify(buildArray("family")));
   formData.set("emergency", JSON.stringify(buildArray("emergency")));
 
-
-  // Bank, Joining, Company objects
-  function buildObject(prefix) {
-    const obj = {};
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith(prefix)) {
-        const match = key.match(/\[(\w+)\]/);
-        if (match && value.trim()) obj[match[1]] = value.trim();
-      }
-    }
-    return obj;
-  }
-
+  // Build objects
   formData.set("bank", JSON.stringify(buildObject("bank[")));
   formData.set("joining", JSON.stringify(buildObject("joining[")));
   formData.set("company", JSON.stringify(buildObject("company[")));
 
+  // Debug: Check what we are sending
+  console.log("FormData arrays/objects ready to send:");
+  console.log("Education:", formData.get("education"));
+  console.log("Bank:", formData.get("bank"));
+  console.log("Employment:", formData.get("employment"));
+  console.log("Skills:", formData.get("skills"));
+  console.log("Family:", formData.get("family"));
+  console.log("Emergency:", formData.get("emergency"));
+  console.log("Joining:", formData.get("joining"));
+  console.log("Company:", formData.get("company"));
+
+  
   try {
     // ✅ Send FormData directly, do NOT set Content-Type
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
