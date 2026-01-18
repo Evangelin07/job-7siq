@@ -63,7 +63,7 @@ const formSchema = new mongoose.Schema({
 const Form = mongoose.model("Form", formSchema);
 
 /* ---------- GENERATE PDF ---------- */
-app.post("/generate-pdf", async (req, res) => {
+app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
     let data = req.body;
 
@@ -101,13 +101,10 @@ app.post("/generate-pdf", async (req, res) => {
       doc.moveDown(2);
     }
 
-        if (req.file && fs.existsSync(req.file.path)) {
-      doc.image(req.file.path, 450, 30, {
-        width: 100,
-        height: 100
-      });
+      if (req.file) {
+      doc.image(req.file.path, 450, 30, { width: 100, height: 120 });
     }
-
+    doc.moveDown(4);
     // Header
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
