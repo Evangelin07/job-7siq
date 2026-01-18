@@ -1,14 +1,12 @@
 document.getElementById("applicationForm").addEventListener("submit", async function (e) {
-  const formElement = this;
-
-  // ✅ STEP 1: browser default validation
-  if (!formElement.checkValidity()) {
-    formElement.reportValidity(); // 🔥 "Please fill out this field"
+// ✅ STEP 2: prevent submit AFTER validation
+  e.preventDefault();
+   
+    if (!formElement.checkValidity()) {
+    formElement.reportValidity(); // 👉 shows tooltip near exact field
     return;
   }
 
-  // ✅ STEP 2: prevent submit AFTER validation
-  e.preventDefault();
   const formData = new FormData(formElement);
 
   // Helper to build arrays of rows and skip empty ones
@@ -92,16 +90,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   formData.set("joining", JSON.stringify(buildObject("joining[")));
   formData.set("company", JSON.stringify(buildObject("company[")));
 
-  // Debug: Check what we are sending
-  console.log("FormData arrays/objects ready to send:");
-  console.log("Education:", formData.get("education"));
-  console.log("Bank:", formData.get("bank"));
-  console.log("Employment:", formData.get("employment"));
-  console.log("Skills:", formData.get("skills"));
-  console.log("Family:", formData.get("family"));
-  console.log("Emergency:", formData.get("emergency"));
-  console.log("Joining:", formData.get("joining"));
-  console.log("Company:", formData.get("company"));
 
   
   try {
