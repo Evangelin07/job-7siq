@@ -1,7 +1,7 @@
 document.getElementById("applicationForm").addEventListener("submit", async function (e) {
   e.preventDefault();
   const formElement = this;
-  const formData = new FormData(document.getElementById("applicationForm"));
+  const formData = new FormData(formElement);
 
   // Helper to build arrays of rows and skip empty ones
   function buildArray(prefix) {
@@ -122,7 +122,7 @@ for (const [key, value] of formData.entries()) {
     window.URL.revokeObjectURL(url);
 
     alert("PDF downloaded successfully ✅");
-    formElement.reset();
+    form.reset();
   } catch (err) {
     console.error("❌ Fetch error:", err);
     alert("Network error. Please try again.");
