@@ -119,6 +119,12 @@ document.getElementById("photoInput").addEventListener("change", function (e) {
 
   if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+    alert("Please upload an image file only ❗");
+    e.target.value = "";
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = function () {
     const img = document.getElementById("photoPreview");
