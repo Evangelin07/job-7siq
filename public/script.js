@@ -49,10 +49,11 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 
     if (!fullName || !phone || !email || !position ||
     !dateOfApplication ||
+    !employmentType ||
+    !maritalStatus ||
     !address ||
     !dob ||
-    !aadhar ||
-    !maritalStatus) {
+    !aadhar ) {
     alert("Please fill all required fields ❗");
     return;
   }
