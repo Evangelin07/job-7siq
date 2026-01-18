@@ -86,7 +86,7 @@ for (const [key, value] of formData.entries()) {
   try {
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      body: formData({
+      body: JSON.stringify({
         fullName,
         phone,
         email,
