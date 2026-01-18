@@ -26,7 +26,16 @@ mongoose
   .then(() => console.log("MongoDB Atlas connected ✅"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-const upload = multer({ storage: multer.memoryStorage()  });
+/* ---------- MULTER ---------- */
+const uploadDir = path.join(__dirname, "uploads");
+// Create uploads folder if it doesn't exist
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
+});
+const upload = multer({ storage });
 
 
 /* ---------- SCHEMA ---------- */
@@ -87,7 +96,7 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       company: parse(req.body.company, {}),
 
       // ✅ photo status
-      photo: req.file ? "uploaded" : ""
+      photo: req.file ? req.file.filename  : ""
     };
 
 
@@ -103,14 +112,14 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
 
     // Optional logo
     const logoPath = path.join(__dirname, "public/logo.jpeg");
-    if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, 40, 30, { width: 100 });
-      doc.moveDown(2);
+    if (fs.existsSync(logoPath))
+      doc.image(logoPath, 40, 30, { width: 100 }).moveDown(2);
+  
+if (req.file) {
+      const photoPath = path.join(uploadDir, req.file.filename);
+      if (fs.existsSync(photoPath)) doc.image(photoPath, 450, 30, { width: 100, height: 120 });
     }
 
-      if (req.file && req.file.buffer) {
-      doc.image(req.file.buffer, 450, 30, { width: 100, height: 120 });
-    }
     doc.moveDown(4);
     // Header
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
