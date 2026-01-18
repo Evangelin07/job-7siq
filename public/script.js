@@ -76,7 +76,7 @@ formData.set("bank", JSON.stringify(bank));
     }
   }
  formData.set("joining", JSON.stringify(joining));
- 
+
   const company = {};
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("company[")) {
@@ -113,3 +113,18 @@ formData.set("bank", JSON.stringify(bank));
     alert("Network error. Please try again.");
   }
 });
+
+document.getElementById("photoInput").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    const img = document.getElementById("photoPreview");
+    img.src = reader.result;
+    img.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
+
