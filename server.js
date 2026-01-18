@@ -121,6 +121,7 @@ const parseJSON = (value, defaultValue) => {
     const logoPath = path.join(__dirname, "public/logo.jpeg");
     if (fs.existsSync(logoPath))
       doc.image(logoPath, 40, 30, { width: 100 }).moveDown(2);
+    
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
