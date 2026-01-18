@@ -22,7 +22,9 @@ document.getElementById("applicationForm").addEventListener("submit", async func
       Object.values(row).some(val => val && val.length > 0)
     );
   }
-
+  
+    const photoFile = document.getElementById("photoInput").files[0];
+  if (photoFile) formData.append("photo", photoFile);
   // Personal info
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
@@ -36,7 +38,8 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const aadhar = formData.get("aadhar")?.trim();
 
   // Arrays
-  const educationalBackground = buildArray("education");
+  // Optional: convert arrays/objects to JSON strings for server
+  formData.set("education", JSON.stringify(buildArray("education")));
 
   // Bank details
 const bank = {};
@@ -46,12 +49,11 @@ for (const [key, value] of formData.entries()) {
     bank[field] = value.trim();
   }
 }
-
-  const employmentHistory    = buildArray("employment");
-  const skillsTraining       = buildArray("skills");
-  const familyDetails        = buildArray("family");
-  const emergencyContact     = buildArray("emergency");
-
+  // Optional: convert arrays/objects to JSON strings for server
+  formData.set("employment", JSON.stringify(buildArray("employment")));
+  formData.set("skills", JSON.stringify(buildArray("skills")));
+  formData.set("family", JSON.stringify(buildArray("family")));
+  formData.set("emergency", JSON.stringify(buildArray("emergency")));
   // Objects
   const joining = {};
   for (const [key, value] of formData.entries()) {
