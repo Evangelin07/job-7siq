@@ -1,13 +1,6 @@
 document.getElementById("applicationForm").addEventListener("submit", async function (e) {
-// ✅ STEP 2: prevent submit AFTER validation
   e.preventDefault();
-   
   const formElement = this;
-    if (!formElement.checkValidity()) {
-    formElement.reportValidity(); // 👉 shows tooltip near exact field
-    return;
-  }
-
   const formData = new FormData(formElement);
 
   // Helper to build arrays of rows and skip empty ones
@@ -30,18 +23,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     );
   }
 
-    function buildObject(prefix) {
-    const obj = {};
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith(prefix)) {
-        const match = key.match(/\[(\w+)\]/);
-        if (match && value.trim()) obj[match[1]] = value.trim();
-      }
-    }
-    return obj;
-  }
-
-
   // Personal info
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
@@ -54,6 +35,10 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
+    if (!fullName || !phone || !email) {
+    alert("Please fill all required fields ❗");
+    return;
+  }
   if (!/^[0-9]{10}$/.test(phone)) {
     alert("Phone number must be 10 digits ❗");
     return;
@@ -62,37 +47,31 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     alert("Enter a valid email address ❗");
     return;
   }
-  
-  if (!/^[0-9]{12}$/.test(aadhar)) {
-    alert("Aadhar must be 12 digits ❗");
-    return;
-  }
-  if (!employmentType) {
-    alert("Please select Employment Type ❗");
-    return;
-  }
-  formData.set("employmentType", JSON.stringify(employmentType));
 
-  // Photo validation
-  const photoFile = formData.get("photo");
-  if (!photoFile || photoFile.size === 0) {
-    alert("Please upload photo ❗");
-    return;
-  }
-
- formData.set("education", JSON.stringify(buildArray("education")));
+  // Arrays
+formData.set("education", JSON.stringify(buildArray("education")));
   formData.set("employment", JSON.stringify(buildArray("employment")));
   formData.set("skills", JSON.stringify(buildArray("skills")));
   formData.set("family", JSON.stringify(buildArray("family")));
   formData.set("emergency", JSON.stringify(buildArray("emergency")));
 
-  // Build objects
+
+  // Bank, Joining, Company objects
+  function buildObject(prefix) {
+    const obj = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith(prefix)) {
+        const match = key.match(/\[(\w+)\]/);
+        if (match && value.trim()) obj[match[1]] = value.trim();
+      }
+    }
+    return obj;
+  }
+
   formData.set("bank", JSON.stringify(buildObject("bank[")));
   formData.set("joining", JSON.stringify(buildObject("joining[")));
   formData.set("company", JSON.stringify(buildObject("company[")));
 
-
-  
   try {
     // ✅ Send FormData directly, do NOT set Content-Type
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
@@ -140,4 +119,5 @@ document.getElementById("photoInput").addEventListener("change", function (e) {
   };
   reader.readAsDataURL(file);
 });
+
 
