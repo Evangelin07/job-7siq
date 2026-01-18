@@ -22,9 +22,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
       Object.values(row).some(val => val && val.length > 0)
     );
   }
-  
-    const photoFile = document.getElementById("photoInput").files[0];
-  if (photoFile) formData.append("photo", photoFile);
+
   // Personal info
   const fullName = formData.get("fullName")?.trim();
   const phone = formData.get("phone")?.trim();
@@ -38,8 +36,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const aadhar = formData.get("aadhar")?.trim();
 
   // Arrays
-  // Optional: convert arrays/objects to JSON strings for server
-  formData.set("education", JSON.stringify(buildArray("education")));
+  const educationalBackground = buildArray("education");
 
   // Bank details
 const bank = {};
@@ -49,11 +46,12 @@ for (const [key, value] of formData.entries()) {
     bank[field] = value.trim();
   }
 }
-  // Optional: convert arrays/objects to JSON strings for server
-  formData.set("employment", JSON.stringify(buildArray("employment")));
-  formData.set("skills", JSON.stringify(buildArray("skills")));
-  formData.set("family", JSON.stringify(buildArray("family")));
-  formData.set("emergency", JSON.stringify(buildArray("emergency")));
+
+  const employmentHistory    = buildArray("employment");
+  const skillsTraining       = buildArray("skills");
+  const familyDetails        = buildArray("family");
+  const emergencyContact     = buildArray("emergency");
+
   // Objects
   const joining = {};
   for (const [key, value] of formData.entries()) {
@@ -88,7 +86,27 @@ for (const [key, value] of formData.entries()) {
   try {
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
-      body: formData
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fullName,
+        phone,
+        email,
+        position,
+        dateOfApplication,
+        employmentType,
+        maritalStatus,
+        address,
+        dob,
+        aadhar,
+        education: educationalBackground,
+        bank,
+        employment: employmentHistory,
+        skills: skillsTraining,
+        family: familyDetails,
+        emergency: emergencyContact,
+        joining,
+        company
+      })
     });
 
     if (!res.ok) {
@@ -111,17 +129,3 @@ for (const [key, value] of formData.entries()) {
     alert("Network error. Please try again.");
   }
 });
-
-document
-  .getElementById("photoInput")
-  .addEventListener("change", function (e) {
-    const file = e.target.files[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function () {
-      document.getElementById("photoPreview").src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
