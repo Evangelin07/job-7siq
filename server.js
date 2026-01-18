@@ -121,7 +121,7 @@ const parseJSON = (value, defaultValue) => {
     const logoPath = path.join(__dirname, "public/logo.jpeg");
     if (fs.existsSync(logoPath))
       doc.image(logoPath, 40, 30, { width: 100 }).moveDown(2);
-    
+
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
@@ -170,7 +170,6 @@ if (req.file) {
       doc.fontSize(12);
       Object.entries({
         "Bank Name": data.bank.bankName,
-        "Account Holder": data.bank.accountHolder,
         "Account Number": data.bank.accountNumber,
         "IFSC Code": data.bank.ifsc,
         "Branch": data.bank.branch
@@ -206,7 +205,7 @@ if (req.file) {
         "2nd Installment": data.joining.secondInstallment,
         "3rd Installment": data.joining.thirdInstallment,
         "Notice Period": data.joining.noticePeriod
-      }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
+      }).forEach(([label, value]) => doc.fontSize(12).text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
 
@@ -219,7 +218,7 @@ if (req.file) {
         "Contact": data.company.contact || data.company.receiver,
         "Receiver Signature": data.company.receiverSignature,
         "HR Signature": data.company.hrSignature
-      }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
+      }).forEach(([label, value]) => doc.fontSize(12).text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
 
