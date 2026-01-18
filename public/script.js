@@ -2,6 +2,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
 // ✅ STEP 2: prevent submit AFTER validation
   e.preventDefault();
    
+  const formElement = this;
     if (!formElement.checkValidity()) {
     formElement.reportValidity(); // 👉 shows tooltip near exact field
     return;
