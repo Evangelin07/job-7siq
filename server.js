@@ -69,16 +69,13 @@ const Form = mongoose.model("Form", formSchema);
 /* ---------- GENERATE PDF ---------- */
 app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
   try {
-const safeParse = (value, defaultValue) => {
+const parseJSON = (value, defaultValue) => {
   if (!value) return defaultValue;
-  if (typeof value === "string") {
     try {
       return JSON.parse(value);
-    } catch {
+    } catch (err){
       return defaultValue;
     }
-  }
-  return value; // Already object/array
 };
 
     // Ensure arrays/objects exist
@@ -94,19 +91,19 @@ const safeParse = (value, defaultValue) => {
       dob: req.body.dob,
       aadhar: req.body.aadhar,
 
-      education: parse(req.body.education, []),
-      bank: parse(req.body.bank, {}),
-      employment: parse(req.body.employment, []),
-      skills: parse(req.body.skills, []),
-      family: parse(req.body.family, []),
-      emergency: parse(req.body.emergency, []),
-      joining: parse(req.body.joining, {}),
-      company: parse(req.body.company, {}),
+      education: parseJSON(req.body.education, []),
+      bank: parseJSON(req.body.bank, {}),
+      employment: parseJSON(req.body.employment, []),
+      skills: parseJSON(req.body.skills, []),
+      family: parseJSON(req.body.family, []),
+      emergency: parseJSON(req.body.emergency, []),
+      joining: parseJSON(req.body.joining, {}),
+      company: parseJSON(req.body.company, {}),
 
       // ✅ photo status
       photo: req.file ? req.file.filename  : ""
     };
-
+  console.log("Parsed data:", data);
 
     // Save to MongoDB
     await Form.create(data);
@@ -150,7 +147,7 @@ if (req.file) {
     doc.moveDown();
 
     // Education
-    if (data.education.length) {
+    if (Array.isArray(data.education) && data.education.length) {
       doc.fontSize(13).text("Educational Background", { underline: true });
       doc.moveDown(0.5);
       data.education.forEach((e, i) => {
@@ -158,12 +155,12 @@ if (req.file) {
           `${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`
         );
       });
-      
+
       doc.moveDown();
     }
 
     // Bank Details
-    if (Object.keys(data.bank).length) {
+    if (data.bank && Object.keys(data.bank).length) {
       doc.fontSize(13).text("Bank Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -176,7 +173,7 @@ if (req.file) {
     }
 
     // Employment
-    if (data.employment.length) {
+    if (Array.isArray(data.employment) && data.employment.length) {
       doc.fontSize(13).text("Employment History", { underline: true });
       doc.moveDown(0.5);
       data.employment.forEach((e, i) => {
@@ -188,7 +185,7 @@ if (req.file) {
     }
 
     // Skills
-    if (data.skills.length) {
+    if (Array.isArray(data.skills) && data.skills.length) {
       doc.fontSize(13).text("Skills & Training", { underline: true });
       doc.moveDown(0.5);
       data.skills.forEach((s, i) => {
@@ -200,7 +197,7 @@ if (req.file) {
     }
 
     // Family
-    if (data.family.length) {
+    if (Array.isArray(data.family) && data.family.length) {
       doc.fontSize(13).text("Family Details", { underline: true });
       doc.moveDown(0.5);
       data.family.forEach((f, i) => {
@@ -210,7 +207,7 @@ if (req.file) {
     }
 
     // Emergency
-    if (data.emergency.length) {
+    if (Array.isArray(data.emergency) && data.emergency.length) {
       doc.fontSize(13).text("Emergency Contacts", { underline: true });
       doc.moveDown(0.5);
       data.emergency.forEach((e, i) => {
@@ -222,7 +219,7 @@ if (req.file) {
     }
 
     // Joining
-    if (Object.keys(data.joining).length) {
+    if (data.joining && Object.keys(data.joining).length) {
       doc.fontSize(13).text("Joining Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
@@ -236,7 +233,7 @@ if (req.file) {
     }
 
     // Company
-    if (Object.keys(data.company).length) {
+    if (data.company && Object.keys(data.company).length) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
