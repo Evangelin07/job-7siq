@@ -122,7 +122,7 @@ for (const [key, value] of formData.entries()) {
     window.URL.revokeObjectURL(url);
 
     alert("PDF downloaded successfully ✅");
-    form.reset();
+    formElement.reset();
   } catch (err) {
     console.error("❌ Fetch error:", err);
     alert("Network error. Please try again.");
