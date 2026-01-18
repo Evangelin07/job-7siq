@@ -49,42 +49,28 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   }
 
   // Arrays
- formData.set("education", JSON.stringify(buildArray("education")));
-
-  // Bank details
-const bank = {};
-for (const [key, value] of formData.entries()) {
-  if (key.startsWith("bank[")) {
-    const field = key.match(/\[(\w+)\]/)[1];
-    bank[field] = value.trim();
-  }
-}
-formData.set("bank", JSON.stringify(bank));
-
+formData.set("education", JSON.stringify(buildArray("education")));
   formData.set("employment", JSON.stringify(buildArray("employment")));
   formData.set("skills", JSON.stringify(buildArray("skills")));
   formData.set("family", JSON.stringify(buildArray("family")));
   formData.set("emergency", JSON.stringify(buildArray("emergency")));
 
 
-  // Objects
-  const joining = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("joining[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      joining[field] = value.trim();
+  // Bank, Joining, Company objects
+  function buildObject(prefix) {
+    const obj = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith(prefix)) {
+        const match = key.match(/\[(\w+)\]/);
+        if (match) obj[match[1]] = value.trim();
+      }
     }
+    return obj;
   }
- formData.set("joining", JSON.stringify(joining));
 
-  const company = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("company[")) {
-      const field = key.match(/\[(\w+)\]/)[1];
-      company[field] = value.trim();
-    }
-  }
- formData.set("company", JSON.stringify(company));
+  formData.set("bank", JSON.stringify(buildObject("bank[")));
+  formData.set("joining", JSON.stringify(buildObject("joining[")));
+  formData.set("company", JSON.stringify(buildObject("company[")));
 
   try {
     // ✅ Send FormData directly, do NOT set Content-Type

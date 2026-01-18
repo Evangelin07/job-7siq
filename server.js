@@ -73,23 +73,25 @@ const parseJSON = (value, defaultValue) => {
   if (!value) return defaultValue;
     try {
       return JSON.parse(value);
-    } catch (err){
-      return defaultValue;
+    } catch (err) {
+        console.error("JSON parse error:", err);
+        return defaultValue;
+
     }
 };
 
     // Ensure arrays/objects exist
        const data = {
-      fullName: req.body.fullName,
-      phone: req.body.phone,
-      email: req.body.email,
-      position: req.body.position,
-      dateOfApplication: req.body.dateOfApplication,
-      employmentType: req.body.employmentType,
-      maritalStatus: req.body.maritalStatus,
-      address: req.body.address,
-      dob: req.body.dob,
-      aadhar: req.body.aadhar,
+      fullName: req.body.fullName || "",
+      phone: req.body.phone || "",
+      email: req.body.email || "",
+      position: req.body.position || "",
+      dateOfApplication: req.body.dateOfApplication || "",
+      employmentType: req.body.employmentType || "",
+      maritalStatus: req.body.maritalStatus || "",
+      address: req.body.address || "",
+      dob: req.body.dob || "",
+      aadhar: req.body.aadhar || "",
 
       education: parseJSON(req.body.education, []),
       bank: parseJSON(req.body.bank, {}),
@@ -124,9 +126,7 @@ if (req.file) {
       const photoPath = path.join(uploadDir, req.file.filename);
       if (fs.existsSync(photoPath)) doc.image(photoPath, 450, 30, { width: 100, height: 120 });
     }
-
     doc.moveDown(4);
-    // Header
     doc.fontSize(20).text("7S IQ PRIVATE LIMITED", { align: "center" });
     doc.moveDown(0.5);
     doc.fontSize(16).text("Application Form", { align: "center" });
@@ -134,118 +134,93 @@ if (req.file) {
 
     // Personal info
     doc.fontSize(12);
-    doc.text(`Full Name: ${data.fullName || ""}`);
-    doc.text(`Phone: ${data.phone || ""}`);
-    doc.text(`Email: ${data.email || ""}`);
-    doc.text(`Position: ${data.position || ""}`);
-    doc.text(`Date of Application: ${data.dateOfApplication || ""}`);
-    doc.text(`Employment Type: ${data.employmentType || ""}`);
-    doc.text(`Marital Status: ${data.maritalStatus || ""}`);
-    doc.text(`Address: ${data.address || ""}`);
-    doc.text(`DOB: ${data.dob || ""}`);
-    doc.text(`Aadhar: ${data.aadhar || ""}`);
+    Object.entries({
+      "Full Name": data.fullName,
+      "Phone": data.phone,
+      "Email": data.email,
+      "Position": data.position,
+      "Date of Application": data.dateOfApplication,
+      "Employment Type": data.employmentType,
+      "Marital Status": data.maritalStatus,
+      "Address": data.address,
+      "DOB": data.dob,
+      "Aadhar": data.aadhar
+    }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
     doc.moveDown();
 
-    // Education
-    if (Array.isArray(data.education) && data.education.length) {
-      doc.fontSize(13).text("Educational Background", { underline: true });
-      doc.moveDown(0.5);
-      data.education.forEach((e, i) => {
-        doc.fontSize(12).text(
-          `${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`
-        );
-      });
+    // Helper to render arrays
+    const renderArray = (title, array, formatter) => {
+      if (Array.isArray(array) && array.length) {
+        doc.fontSize(13).text(title, { underline: true });
+        doc.moveDown(0.5);
+        array.forEach((item, i) => formatter(item, i));
+        doc.moveDown();
+      }
+    };
 
-      doc.moveDown();
-    }
+    renderArray("Educational Background", data.education, (e, i) =>
+      doc.fontSize(12).text(`${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`)
+    );
 
-    // Bank Details
     if (data.bank && Object.keys(data.bank).length) {
       doc.fontSize(13).text("Bank Details", { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(12);
-      doc.text(`Bank Name        : ${data.bank.bankName || ""}`);
-      doc.text(`Account Holder   : ${data.bank.accountHolder || ""}`);
-      doc.text(`Account Number   : ${data.bank.accountNumber || ""}`);
-      doc.text(`IFSC Code        : ${data.bank.ifsc || ""}`);
-      doc.text(`Branch           : ${data.bank.branch || ""}`);
+      Object.entries({
+        "Bank Name": data.bank.bankName,
+        "Account Holder": data.bank.accountHolder,
+        "Account Number": data.bank.accountNumber,
+        "IFSC Code": data.bank.ifsc,
+        "Branch": data.bank.branch
+      }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
 
-    // Employment
-    if (Array.isArray(data.employment) && data.employment.length) {
-      doc.fontSize(13).text("Employment History", { underline: true });
-      doc.moveDown(0.5);
-      data.employment.forEach((e, i) => {
-        doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
-        doc.text(`Reason: ${e.reason || ""}`);
-        doc.moveDown(0.3);
-      });
-      doc.moveDown();
-    }
+    renderArray("Employment History", data.employment, (e, i) => {
+      doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
+      doc.text(`Reason: ${e.reason || ""}`);
+      doc.moveDown(0.3);
+    });
 
-    // Skills
-    if (Array.isArray(data.skills) && data.skills.length) {
-      doc.fontSize(13).text("Skills & Training", { underline: true });
-      doc.moveDown(0.5);
-      data.skills.forEach((s, i) => {
-        doc.fontSize(12).text(
-          `${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`
-        );
-      });
-      doc.moveDown();
-    }
+    renderArray("Skills & Training", data.skills, (s, i) =>
+      doc.fontSize(12).text(`${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`)
+    );
 
-    // Family
-    if (Array.isArray(data.family) && data.family.length) {
-      doc.fontSize(13).text("Family Details", { underline: true });
-      doc.moveDown(0.5);
-      data.family.forEach((f, i) => {
-        doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`);
-      });
-      doc.moveDown();
-    }
+    renderArray("Family Details", data.family, (f, i) =>
+      doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`)
+    );
 
-    // Emergency
-    if (Array.isArray(data.emergency) && data.emergency.length) {
-      doc.fontSize(13).text("Emergency Contacts", { underline: true });
-      doc.moveDown(0.5);
-      data.emergency.forEach((e, i) => {
-        doc.fontSize(12).text(
-          `${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`
-        );
-      });
-      doc.moveDown();
-    }
+    renderArray("Emergency Contacts", data.emergency, (e, i) =>
+      doc.fontSize(12).text(`${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`)
+    );
 
-    // Joining
     if (data.joining && Object.keys(data.joining).length) {
       doc.fontSize(13).text("Joining Details", { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(12);
-      doc.text(`Joining Date        : ${data.joining.joiningDate || data.joining.date || ""}`);
-      doc.text(`Fees                : ${data.joining.fees || ""}`);
-      doc.text(`1st Installment     : ${data.joining.firstInstallment || ""}`);
-      doc.text(`2nd Installment     : ${data.joining.secondInstallment || ""}`);
-      doc.text(`3rd Installment     : ${data.joining.thirdInstallment || ""}`);
-      doc.text(`Notice Period       : ${data.joining.noticePeriod || ""}`);
+      Object.entries({
+        "Joining Date": data.joining.joiningDate || data.joining.date,
+        "Fees": data.joining.fees,
+        "1st Installment": data.joining.firstInstallment,
+        "2nd Installment": data.joining.secondInstallment,
+        "3rd Installment": data.joining.thirdInstallment,
+        "Notice Period": data.joining.noticePeriod
+      }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
 
-    // Company
     if (data.company && Object.keys(data.company).length) {
       doc.fontSize(13).text("Company Details", { underline: true });
       doc.moveDown(0.5);
-      doc.fontSize(12);
-      doc.text(`Name: ${data.company.name || ""}`);
-      doc.text(`Address: ${data.company.address || ""}`);
-      doc.text(`Contact: ${data.company.contact || data.company.receiver || ""}`);
-      doc.text(`Receiver Signature: ${data.company.receiverSignature || ""}`);
-      doc.text(`HR Signature: ${data.company.hrSignature || ""}`);
+      Object.entries({
+        "Name": data.company.name,
+        "Address": data.company.address,
+        "Contact": data.company.contact || data.company.receiver,
+        "Receiver Signature": data.company.receiverSignature,
+        "HR Signature": data.company.hrSignature
+      }).forEach(([label, value]) => doc.text(`${label}: ${value || ""}`));
       doc.moveDown();
     }
 
-    // End PDF
     doc.end();
   } catch (err) {
     console.error("PDF generation error:", err);
