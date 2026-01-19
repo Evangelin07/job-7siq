@@ -17,10 +17,21 @@ document.getElementById("applicationForm").addEventListener("submit", async func
         }
       }
     }
-    // ✅ Only keep rows where at least one field is filled
     return Object.values(obj).filter(row =>
       Object.values(row).some(val => val && val.length > 0)
     );
+  }
+
+  // Helper to build objects
+  function buildObject(prefix) {
+    const obj = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith(prefix)) {
+        const match = key.match(/\[(.+?)\]/); // safer regex
+        if (match && value.trim()) obj[match[1]] = value.trim();
+      }
+    }
+    return obj;
   }
 
   // Personal info
@@ -30,14 +41,14 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const position = formData.get("position")?.trim();
   const dateOfApplication = formData.get("dateOfApplication")?.trim();
   const employmentTypeElems = formElement.querySelectorAll('input[name="employmentType"]:checked');
-const employmentType = Array.from(employmentTypeElems).map(el => el.value).join(", ");
-formData.set("employmentType", employmentType);
+  const employmentType = Array.from(employmentTypeElems).map(el => el.value).join(", ");
+  formData.set("employmentType", employmentType);
   const maritalStatus = formData.get("maritalStatus")?.trim();
   const address = formData.get("address")?.trim();
   const dob = formData.get("dob")?.trim();
   const aadhar = formData.get("aadhar")?.trim();
 
-    if (!fullName || !phone || !email) {
+  if (!fullName || !phone || !email) {
     alert("Please fill all required fields ❗");
     return;
   }
@@ -49,45 +60,42 @@ formData.set("employmentType", employmentType);
     alert("Enter a valid email address ❗");
     return;
   }
-  // Remove raw keys before setting JSON versions
-function cleanFormData(prefix) {
-  for (const key of Array.from(formData.keys())) {
-    if (key.startsWith(prefix)) formData.delete(key);
-  }
-}
 
-// Clean up raw keys
-["education", "employment", "skills", "family", "emergency"].forEach(cleanFormData);
-["bank[", "joining[", "company["].forEach(cleanFormData);
+  // ✅ Build arrays/objects first
+  const educationArr = buildArray("education");
+  const employmentArr = buildArray("employment");
+  const skillsArr = buildArray("skills");
+  const familyArr = buildArray("family");
+  const emergencyArr = buildArray("emergency");
 
+  const bankObj = buildObject("bank[");
+  const joiningObj = buildObject("joining[");
+  const companyObj = buildObject("company[");
 
-  // Arrays
-formData.set("education", JSON.stringify(buildArray("education")));
-  formData.set("employment", JSON.stringify(buildArray("employment")));
-  formData.set("skills", JSON.stringify(buildArray("skills")));
-  formData.set("family", JSON.stringify(buildArray("family")));
-  formData.set("emergency", JSON.stringify(buildArray("emergency")));
-
-  // Bank, Joining, Company objects
-  function buildObject(prefix) {
-    const obj = {};
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith(prefix)) {
-        const match = key.match(/\[(\w+)\]/);
-        if (match && value.trim()) obj[match[1]] = value.trim();
-      }
+  // ✅ Now clean raw keys
+  function cleanFormData(prefix) {
+    for (const key of Array.from(formData.keys())) {
+      if (key.startsWith(prefix)) formData.delete(key);
     }
-    return obj;
   }
+  ["education", "employment", "skills", "family", "emergency"].forEach(cleanFormData);
+  ["bank[", "joining[", "company["].forEach(cleanFormData);
 
-  formData.set("bank", JSON.stringify(buildObject("bank[")));
-  formData.set("joining", JSON.stringify(buildObject("joining[")));
-  formData.set("company", JSON.stringify(buildObject("company[")));
+  // ✅ Finally set JSON strings
+  formData.set("education", JSON.stringify(educationArr));
+  formData.set("employment", JSON.stringify(employmentArr));
+  formData.set("skills", JSON.stringify(skillsArr));
+  formData.set("family", JSON.stringify(familyArr));
+  formData.set("emergency", JSON.stringify(emergencyArr));
+
+  formData.set("bank", JSON.stringify(bankObj));
+  formData.set("joining", JSON.stringify(joiningObj));
+  formData.set("company", JSON.stringify(companyObj));
 
   console.log("FormData preview:");
-for (const [key, value] of formData.entries()) {
-  console.log(key, value);
-}
+  for (const [key, value] of formData.entries()) {
+    console.log(key, value);
+  }
 
   try {
     // ✅ Send FormData directly, do NOT set Content-Type
@@ -117,12 +125,12 @@ for (const [key, value] of formData.entries()) {
   }
 });
 
+// ✅ Photo preview
 document.getElementById("photoInput").addEventListener("change", function (e) {
   const file = e.target.files[0];
-
   if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+  if (!file.type.startsWith("image/")) {
     alert("Please upload an image file only ❗");
     e.target.value = "";
     return;
@@ -136,5 +144,3 @@ document.getElementById("photoInput").addEventListener("change", function (e) {
   };
   reader.readAsDataURL(file);
 });
-
-
