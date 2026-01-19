@@ -66,6 +66,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     !validateTableRow("family", 3) ||
     !validateTableRow("emergency", 5)
   ) {
+    alert("Please complete all required rows ❗");
     return;
   }
 
