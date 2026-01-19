@@ -3,36 +3,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const formElement = this;
   const formData = new FormData(formElement);
 
-   function validateTableRow(prefix, fieldsPerRow) {
-    const rows = {};
-
-    document.querySelectorAll(`[name^="${prefix}["]`).forEach(input => {
-      const match = input.name.match(/\[(\d+)\]\[(\w+)\]/);
-      if (!match) return;
-
-      const index = match[1];
-      if (!rows[index]) rows[index] = [];
-      rows[index].push(input);
-    });
-
-    for (const rowInputs of Object.values(rows)) {
-      const filled = rowInputs.filter(i => i.value.trim() !== "");
-
-      // ❌ partially filled row
-      if (filled.length > 0 && filled.length < fieldsPerRow) {
-        rowInputs.forEach(i => i.setAttribute("required", "required"));
-        rowInputs.find(i => !i.value.trim()).reportValidity();
-        return false;
-      }
-
-      // ✅ completely empty row
-      if (filled.length === 0) {
-        rowInputs.forEach(i => i.removeAttribute("required"));
-      }
-    }
-    return true;
-  }
-
   // Helper to build arrays of rows and skip empty ones
   function buildArray(prefix) {
     const obj = {};
@@ -88,16 +58,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   }
   if (!/^\S+@\S+\.\S+$/.test(email)) {
     alert("Enter a valid email address ❗");
-    return;
-  }
-
-  if (
-    !validateTableRow("education", 5) ||
-    !validateTableRow("employment", 4) ||
-    !validateTableRow("skills", 4) ||
-    !validateTableRow("family", 3) ||
-    !validateTableRow("emergency", 5)
-  ) {
     return;
   }
 
