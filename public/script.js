@@ -45,14 +45,26 @@ document.getElementById("applicationForm").addEventListener("submit", async func
       rows[index].push(input);
     });
 
-    for (const rowInputs of Object.values(rows)) {
+    const rowEntries = Object.entries(rows);
+    for (const [index, rowInputs] of rowEntries) {
       const filled = rowInputs.filter(i => i.value.trim() !== "");
+
+      // ❌ Partially filled row
       if (filled.length > 0 && filled.length < fieldsPerRow) {
         rowInputs.forEach(i => i.setAttribute("required", "required"));
-        rowInputs.find(i => !i.value.trim()).reportValidity();
+        rowInputs.find(i => !i.value.trim())?.reportValidity();
         return false;
       }
-      if (filled.length === 0) {
+
+      // ❌ Completely empty first row — show warning
+      if (filled.length === 0 && index === "0") {
+        alert(`Please fill at least one ${prefix} row ❗`);
+        rowInputs[0].reportValidity();
+        return false;
+      }
+
+      // ✅ Fully filled row
+      if (filled.length === fieldsPerRow) {
         rowInputs.forEach(i => i.removeAttribute("required"));
       }
     }
@@ -66,7 +78,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     !validateTableRow("family", 3) ||
     !validateTableRow("emergency", 5)
   ) {
-    alert("Please complete all required rows ❗");
     return;
   }
 
