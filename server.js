@@ -195,21 +195,20 @@ renderArray("Employment History", data.employment, (e, i) => {
   doc.moveDown(0.3);
 }); // ✅ This is correct
 
-    renderArray("Skills & Training", data.skills, (s, i) => {
-      if (Object.values(e).every(val => !val || val.trim() === "")) return;
-      doc.fontSize(12).text(`${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`);
-    });
+renderArray("Skills & Training", data.skills, (s, i) => {
+  if (Object.values(s).every(val => !val || val.trim() === "")) return;
+  doc.fontSize(12).text(`${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`);
+});
 
-    renderArray("Family Details", data.family, (f, i) => {
-      if (Object.values(e).every(val => !val || val.trim() === "")) return;
-      doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`);
-    });
+renderArray("Family Details", data.family, (f, i) => {
+  if (Object.values(f).every(val => !val || val.trim() === "")) return;
+  doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`);
+});
 
-
-   renderArray("Emergency Contacts", data.emergency, (e, i) => {
-    if (Object.values(e).every(val => !val || val.trim() === "")) return;
-      doc.fontSize(12).text(`${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`);
-    });
+renderArray("Emergency Contacts", data.emergency, (e, i) => {
+  if (Object.values(e).every(val => !val || val.trim() === "")) return;
+  doc.fontSize(12).text(`${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`);
+});
 
     if (data.joining && Object.values(data.joining).some(val => val && val.trim() !== "")) {
       doc.fontSize(13).text("Joining Details", { underline: true });
