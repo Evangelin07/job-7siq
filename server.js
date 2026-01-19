@@ -106,7 +106,8 @@ app.post("/generate-pdf", upload.single("photo"), async (req, res) => {
       // ✅ photo status
       photo: req.file ? req.file.filename  : ""
     };
-  console.log("Parsed data:", data);
+
+    console.log("Parsed data:", data);
 
     // Save to MongoDB
     await Form.create(data);
