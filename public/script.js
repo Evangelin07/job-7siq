@@ -3,7 +3,73 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const formElement = this;
   const formData = new FormData(formElement);
 
-  // Helper to build arrays of rows and skip empty ones
+  // 🔍 Validate ALL personal fields
+  const personalFields = {
+    fullName: formData.get("fullName")?.trim(),
+    phone: formData.get("phone")?.trim(),
+    email: formData.get("email")?.trim(),
+    position: formData.get("position")?.trim(),
+    dateOfApplication: formData.get("dateOfApplication")?.trim(),
+    maritalStatus: formData.get("maritalStatus")?.trim(),
+    address: formData.get("address")?.trim(),
+    dob: formData.get("dob")?.trim(),
+    aadhar: formData.get("aadhar")?.trim()
+  };
+
+  for (const [key, value] of Object.entries(personalFields)) {
+    if (!value) {
+      alert(`Please fill the ${key} field ❗`);
+      formElement.querySelector(`[name="${key}"]`)?.reportValidity();
+      return;
+    }
+  }
+
+  // 🔍 Extra checks for phone & email
+  if (!/^[0-9]{10}$/.test(personalFields.phone)) {
+    alert("Phone number must be 10 digits ❗");
+    return;
+  }
+  if (!/^\S+@\S+\.\S+$/.test(personalFields.email)) {
+    alert("Enter a valid email address ❗");
+    return;
+  }
+
+  // 🔍 Validate table rows (education, employment, skills, family, emergency)
+  function validateTableRow(prefix, fieldsPerRow) {
+    const rows = {};
+    document.querySelectorAll(`[name^="${prefix}["]`).forEach(input => {
+      const match = input.name.match(/\[(\d+)\]\[(\w+)\]/);
+      if (!match) return;
+      const index = match[1];
+      if (!rows[index]) rows[index] = [];
+      rows[index].push(input);
+    });
+
+    for (const rowInputs of Object.values(rows)) {
+      const filled = rowInputs.filter(i => i.value.trim() !== "");
+      if (filled.length > 0 && filled.length < fieldsPerRow) {
+        rowInputs.forEach(i => i.setAttribute("required", "required"));
+        rowInputs.find(i => !i.value.trim()).reportValidity();
+        return false;
+      }
+      if (filled.length === 0) {
+        rowInputs.forEach(i => i.removeAttribute("required"));
+      }
+    }
+    return true;
+  }
+
+  if (
+    !validateTableRow("education", 5) ||
+    !validateTableRow("employment", 4) ||
+    !validateTableRow("skills", 4) ||
+    !validateTableRow("family", 3) ||
+    !validateTableRow("emergency", 5)
+  ) {
+    return;
+  }
+
+  // ✅ Build arrays/objects
   function buildArray(prefix) {
     const obj = {};
     for (const [key, value] of formData.entries()) {
@@ -22,46 +88,17 @@ document.getElementById("applicationForm").addEventListener("submit", async func
     );
   }
 
-  // Helper to build objects
   function buildObject(prefix) {
     const obj = {};
     for (const [key, value] of formData.entries()) {
       if (key.startsWith(prefix)) {
-        const match = key.match(/\[(.+?)\]/); // safer regex
+        const match = key.match(/\[(.+?)\]/);
         if (match && value.trim()) obj[match[1]] = value.trim();
       }
     }
     return obj;
   }
 
-  // Personal info
-  const fullName = formData.get("fullName")?.trim();
-  const phone = formData.get("phone")?.trim();
-  const email = formData.get("email")?.trim();
-  const position = formData.get("position")?.trim();
-  const dateOfApplication = formData.get("dateOfApplication")?.trim();
-  const employmentTypeElems = formElement.querySelectorAll('input[name="employmentType"]:checked');
-  const employmentType = Array.from(employmentTypeElems).map(el => el.value).join(", ");
-  formData.set("employmentType", employmentType);
-  const maritalStatus = formData.get("maritalStatus")?.trim();
-  const address = formData.get("address")?.trim();
-  const dob = formData.get("dob")?.trim();
-  const aadhar = formData.get("aadhar")?.trim();
-
-  if (!fullName || !phone || !email) {
-    alert("Please fill all required fields ❗");
-    return;
-  }
-  if (!/^[0-9]{10}$/.test(phone)) {
-    alert("Phone number must be 10 digits ❗");
-    return;
-  }
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
-    alert("Enter a valid email address ❗");
-    return;
-  }
-
-  // ✅ Build arrays/objects first
   const educationArr = buildArray("education");
   const employmentArr = buildArray("employment");
   const skillsArr = buildArray("skills");
@@ -72,7 +109,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   const joiningObj = buildObject("joining[");
   const companyObj = buildObject("company[");
 
-  // ✅ Now clean raw keys
+  // Clean raw keys
   function cleanFormData(prefix) {
     for (const key of Array.from(formData.keys())) {
       if (key.startsWith(prefix)) formData.delete(key);
@@ -81,7 +118,7 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   ["education", "employment", "skills", "family", "emergency"].forEach(cleanFormData);
   ["bank[", "joining[", "company["].forEach(cleanFormData);
 
-  // ✅ Finally set JSON strings
+  // Set JSON strings
   formData.set("education", JSON.stringify(educationArr));
   formData.set("employment", JSON.stringify(employmentArr));
   formData.set("skills", JSON.stringify(skillsArr));
@@ -98,7 +135,6 @@ document.getElementById("applicationForm").addEventListener("submit", async func
   }
 
   try {
-    // ✅ Send FormData directly, do NOT set Content-Type
     const res = await fetch("https://job-7siq.onrender.com/generate-pdf", {
       method: "POST",
       body: formData
