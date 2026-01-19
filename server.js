@@ -170,6 +170,7 @@ if (req.file) {
     };
 
     renderArray("Educational Background", data.education, (e, i) => {
+        if (Object.values(e).every(val => !val || val.trim() === "")) return;
       doc.fontSize(12).text(`${i + 1}. ${e.degree || ""}, ${e.institute || ""}, ${e.year || ""}, ${e.grade || ""}, ${e.city || ""}`);
     });
 
@@ -187,24 +188,26 @@ if (req.file) {
       doc.moveDown();
     }
 
-    renderArray("Employment History", data.employment, (e, i) => {
-      if (Object.values(e).some(val => val && val.trim() !== "")) {
-        doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
-        if (e.reason) doc.text(`Reason: ${e.reason}`);
-        doc.moveDown(0.3);
-      }
-    });
+renderArray("Employment History", data.employment, (e, i) => {
+  if (Object.values(e).every(val => !val || val.trim() === "")) return;
+  doc.fontSize(12).text(`${i + 1}. ${e.company || ""} – ${e.position || ""} (${e.year || ""})`);
+  if (e.reason) doc.text(`Reason: ${e.reason}`);
+  doc.moveDown(0.3);
+}); // ✅ This is correct
 
     renderArray("Skills & Training", data.skills, (s, i) => {
+      if (Object.values(e).every(val => !val || val.trim() === "")) return;
       doc.fontSize(12).text(`${i + 1}. ${s.skill || ""} | ${s.level || ""} | ${s.year || ""} | ${s.institute || ""}`);
     });
 
     renderArray("Family Details", data.family, (f, i) => {
+      if (Object.values(e).every(val => !val || val.trim() === "")) return;
       doc.fontSize(12).text(`${i + 1}. ${f.name || ""} – ${f.relation || ""} – ${f.occupation || ""}`);
     });
 
 
    renderArray("Emergency Contacts", data.emergency, (e, i) => {
+    if (Object.values(e).every(val => !val || val.trim() === "")) return;
       doc.fontSize(12).text(`${i + 1}. ${e.name || ""}, ${e.relationship || ""}, ${e.occupation || ""}, ${e.qualification || ""}, ${e.city || ""}`);
     });
 
