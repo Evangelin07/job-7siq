@@ -68,11 +68,6 @@ formData.set("education", JSON.stringify(buildArray("education")));
   formData.set("family", JSON.stringify(buildArray("family")));
   formData.set("emergency", JSON.stringify(buildArray("emergency")));
 
-  formData.set("bank", JSON.stringify(buildObject("bank[")));
-formData.set("joining", JSON.stringify(buildObject("joining[")));
-formData.set("company", JSON.stringify(buildObject("company[")));
-
-
   // Bank, Joining, Company objects
   function buildObject(prefix) {
     const obj = {};
